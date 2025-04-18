@@ -1,0 +1,12 @@
+{
+  "scheduleAlgorithm": "RR",
+  "processesNumber": 30,
+  "maxTime": 1000,
+  "quantum": 5,
+  "random": {
+    "arrival": {"type": "poisson", "lambda": 4},
+    "burst": {"type": "exponential", "lambda": 0.1},
+    "seed": 1234
+  }
+}
+  
