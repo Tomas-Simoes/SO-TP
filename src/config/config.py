@@ -8,6 +8,7 @@ class Config:
     def __init__(self, config):
         self.config = config
 
+        print(config)
         self.processGenerationConfig = ProcessGenerationConfig(self.config["processGeneration"])
         self.clockConfig = ClockConfig(self.config["clock"])
         self.schedulingConfig = SchedulingConfig(self.config["scheduling"])

@@ -5,9 +5,9 @@ from scheduler import Scheduler
 from processes.process_generation import ProcessGenerator
 
 class Simulation:
-    def __init__(self, configDir="./config.json"):
+    def __init__(self, config):
         # Initializes our simulation configuration
-        config = Config(configDir)
+        config = Config(config)
         processGenConfig = config.processGenerationConfig
         clockConfig = config.clockConfig
         schedulingConfig = config.schedulingConfig

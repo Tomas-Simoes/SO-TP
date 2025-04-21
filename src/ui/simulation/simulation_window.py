@@ -39,7 +39,7 @@ class SimulationWindow(QMainWindow):
         main_layout.setRowStretch(1, 1)
 
         ## Class to do the actual simulation
-        Simulation()
+        Simulation(simulationConfig)
 
 
     def createTopRightPanel(self):
