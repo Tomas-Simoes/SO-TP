@@ -24,6 +24,5 @@ class Simulation:
 
         # Responsible for feading the Scheduler with a process when it arrives
         self.clock = Clock(clockConfig, self.scheduler, processList)
-
-    def start(self):
         self.clock.start()
+
