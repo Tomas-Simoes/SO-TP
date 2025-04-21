@@ -5,10 +5,9 @@ from config.types.clock import ClockConfig
 from config.types.scheduling import SchedulingConfig
 
 class Config:
-    def __init__(self, config_dir):
-        with open(config_dir, 'r') as file:
-            self.config = json.load(file)
-        
+    def __init__(self, config):
+        self.config = config
+
         self.processGenerationConfig = ProcessGenerationConfig(self.config["processGeneration"])
         self.clockConfig = ClockConfig(self.config["clock"])
         self.schedulingConfig = SchedulingConfig(self.config["scheduling"])

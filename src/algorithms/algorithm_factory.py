@@ -11,22 +11,22 @@ def create_algorithm(config: SchedulingConfig):
     algorithmName = config.scheduleAlgorithm.upper()
     
     match algorithmName:
-        case "FCFS":
+        case "FIRST-COME, FIRST-SERVED":
             return FCFS()
-        case "SJF" | "SJ" | "SHORTEST_JOB_FIRST":
+        case "SHORTEST JOB FIRST":
             return ShortestJob()
-        case "PRIORITY_NON_PREEMPTIVE":
+        case "PRIORITY SCHEDULING (NON-PREEMPTIVE)":
             return PriorityNonPreemptive()
-        case "PRIORITY_PREEMPTIVE":
+        case "PRIORITY SCHEDULING (PREEMPTIVE)":
             return PriorityPreemptive()
-        case "RR" | "ROUND_ROBIN":
+        case "ROUND ROBIN":
             if config and config.timeQuantum:
                 return RoundRobin(time_quantum=config["time_quantum"])
             else:
                 raise ValueError("Time quantum must be specified for Round Robin scheduling")
-        case "RATE_MONOTONIC":
+        case "RATE MONOTONIC":
             return RateMonotonic()
-        case "EDF" | "EARLIEST_DEADLINE_FIRST":
+        case "EARLIEST DEADLINE FIRST":
             return EarliestDeadline()
         case _:
             raise ValueError(f"Unknown scheduling algorithm: {algorithmName}")

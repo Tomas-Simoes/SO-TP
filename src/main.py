@@ -1,33 +1,13 @@
-from config.config import Config
+import sys
 
-from clock import Clock
-from scheduler import Scheduler
-from processes.process_generation import ProcessGenerator
-
+from PyQt6.QtWidgets import QApplication
+from ui.config.config_window import ConfigWindow
 
 def bootstrap():
-    # Responsible for extracting modules configurations from ./config.json
-    config = Config("./config.json")
-    processGeneratorConfig = config.processGenerationConfig
-    clockConfig = config.clockConfig
-    schedulingConfig = config.schedulingConfig
-
-    # Responsible for generate processes using probabilistics distributions
-    processGenerator = ProcessGenerator(processGeneratorConfig)
-
-    processList = []
-    if processGeneratorConfig.useProcessGeneration:
-        processList = processGenerator.generate_random_processes() 
-    else:
-        processList = processGenerator.get_static_processes()
-
-    # Responsible to decide which process to execute
-    scheduler = Scheduler(schedulingConfig)
-
-    # Responsible for feading the Scheduler with a process when it arrives
-    clock = Clock(clockConfig, scheduler, processList)
-    clockThread = clock.thread
-
+    app = QApplication([])
+    initialWindow = ConfigWindow()
+    initialWindow.show()
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     bootstrap()

@@ -17,7 +17,8 @@ class Clock:
             self.thread = threading.Thread(target=self.eventBasedClock)
         else:
             self.thread = threading.Thread(target=self.tickBasedClock)
-
+    
+    def start(self):
         self.thread.start()
     
     def eventBasedClock(self):
@@ -44,3 +45,5 @@ class Clock:
             return currentProcess
 
         return None
+    
+    
