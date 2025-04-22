@@ -15,8 +15,8 @@ class ProcessesPanel(QGroupBox):
         super().__init__("Processes Panel", parent)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
-        self.main_layout = QVBoxLayout()
-        self.setLayout(self.main_layout)
+        self.mainLayout = QVBoxLayout()
+        self.setLayout(self.mainLayout)
 
         self.config = config 
         self.readyProcessBlocks = {}
@@ -27,7 +27,7 @@ class ProcessesPanel(QGroupBox):
         self.prioritiesSection()
         self.statisticsSection()
 
-        self.main_layout.addStretch(1)
+        self.mainLayout.addStretch(1)
 
     @pyqtSlot(object)
     def updateReadyProcesses(self, processList: List[Process]):
@@ -38,7 +38,7 @@ class ProcessesPanel(QGroupBox):
 
         for pid in removedPIDs:
             removedBlock = self.readyProcessBlocks.pop(pid)
-            self.ready_layout.removeWidget(removedBlock)
+            self.readyLayout.removeWidget(removedBlock)
             removedBlock.setParent(None)
             removedBlock.deleteLater()            
 
@@ -47,9 +47,9 @@ class ProcessesPanel(QGroupBox):
             if pid not in self.readyProcessBlocks:
                 newProcessBlock = ProcessBlock(pid)
                 self.readyProcessBlocks[pid] = newProcessBlock
-                self.ready_layout.addWidget(newProcessBlock)
+                self.readyLayout.addWidget(newProcessBlock)
 
-        self.ready_queue_group.setTitle(f"Ready Process Queue ({len(self.readyProcessBlocks)})")
+        self.readyQueueGroup.setTitle(f"Ready Process Queue ({len(self.readyProcessBlocks)})")
         self.updatePrioritiesSection(processList)
 
     def updatePrioritiesSection(self, processList: List[Process]):
@@ -65,16 +65,16 @@ class ProcessesPanel(QGroupBox):
     #       
     #  Current Running Process  | Statistics about that Processs
     def runningProcessSection(self):
-        runningProcessLayout = QHBoxLayout()
+        sectionLayout = QHBoxLayout()
         
         placeholderRunningProcessBlock = ProcessBlock("None")
 
         runningProcessGroup = QGroupBox("Running Process")
         runningProcessGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
-        runningprocessLayout = QVBoxLayout()
-        runningprocessLayout.addWidget(placeholderRunningProcessBlock, 0, Qt.AlignmentFlag.AlignCenter)
-        runningProcessGroup.setLayout(runningprocessLayout)
+        runningProcessLayout = QVBoxLayout()
+        runningProcessLayout.addWidget(placeholderRunningProcessBlock, 0, Qt.AlignmentFlag.AlignCenter)
+        runningProcessGroup.setLayout(runningProcessLayout)
         
         statsGroup = QGroupBox("Running Process Stats")
         statsGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -106,79 +106,76 @@ class ProcessesPanel(QGroupBox):
         
         statsGroup.setLayout(statsLayout)
         
-        runningProcessLayout.addWidget(runningProcessGroup, 1)
-        runningProcessLayout.addWidget(statsGroup, 1)
+        sectionLayout.addWidget(runningProcessGroup, 1)
+        sectionLayout.addWidget(statsGroup, 1)
         
-        self.main_layout.addLayout(runningProcessLayout)
+        self.mainLayout.addLayout(sectionLayout)
     
            
-    # Creates running process section in the following format:
-    #
-    #  Current Running Process  | Statistics about that Processs
+    # Creates ready queue section, which contains a list of ProcessBlocks
     def readyQueueSection(self):
-        ready_queue_group = QGroupBox("Ready Process Queue")
-        ready_queue_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        readyQueueGroup = QGroupBox("Ready Process Queue")
+        readyQueueGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scrollArea = QScrollArea()
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        scroll_content = QWidget()
-        ready_layout = QHBoxLayout(scroll_content)
-        ready_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        ready_layout.setContentsMargins(0, 0, 0, 0)
-        ready_layout.setSpacing(10)  # Adjust spacing to control shrinking
+        scrollWidget = QWidget()
+        readyLayout = QHBoxLayout(scrollWidget)
+        readyLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        readyLayout.setContentsMargins(0, 0, 0, 0)
+        readyLayout.setSpacing(10)  
         
-        scroll_area.setWidget(scroll_content)
+        scrollArea.setWidget(scrollWidget)
         
-        ready_queue_layout = QVBoxLayout()
-        ready_queue_layout.addWidget(scroll_area)
-        ready_queue_group.setLayout(ready_queue_layout)
-        ready_queue_group.setMaximumHeight(150)
-        ready_queue_layout.setContentsMargins(0, 0, 0, 0)
-        ready_queue_layout.setSpacing(0)
+        readyQueueLayout = QVBoxLayout()
+        readyQueueLayout.addWidget(scrollArea)
+        readyQueueGroup.setLayout(readyQueueLayout)
+        readyQueueGroup.setMaximumHeight(150)
+        readyQueueLayout.setContentsMargins(0, 0, 0, 0)
+        readyQueueLayout.setSpacing(0)
 
-        self.main_layout.addWidget(ready_queue_group)
+        self.mainLayout.addWidget(readyQueueGroup)
 
-        self.ready_layout = ready_layout
-        self.ready_queue_group = ready_queue_group
+        self.readyLayout = readyLayout
+        self.readyQueueGroup = readyQueueGroup
     
     def prioritiesSection(self):
-        # Priorities section
-        priorities_group = QGroupBox("Priorities (Weight%)")
-        priorities_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        prioritiesGroup = QGroupBox("Priorities (Weight%)")
+        prioritiesGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         
-        priorities_layout = QGridLayout()
-        priorities_layout.setVerticalSpacing(2)
-        priorities_layout.setHorizontalSpacing(10)
+        prioritiesLayout = QGridLayout()
+        prioritiesLayout.setVerticalSpacing(2)
+        prioritiesLayout.setHorizontalSpacing(10)
         
         for i in range(10):
             row = i % 5
             col = i // 5
             label = QLabel(f"Priority {i} ({self.config['processGeneration']['priorities']['weights'][i]}): None")
-            priorities_layout.addWidget(label, row, col)
+            prioritiesLayout.addWidget(label, row, col)
 
             self.prioritiesLabels[i] = label
         
-        priorities_group.setLayout(priorities_layout)
-        self.main_layout.addWidget(priorities_group)
+        prioritiesGroup.setLayout(prioritiesLayout)
+        self.mainLayout.addWidget(prioritiesGroup)
     
     def statisticsSection(self):
         # Statistics section
-        statistics_group = QGroupBox("Statistics")
-        statistics_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        statisticsGroup = QGroupBox("Statistics")
+        statisticsGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         
-        statistics_layout = QVBoxLayout()
-        statistics_layout.setSpacing(2)
+        statisticsLayout = QVBoxLayout()
+        statisticsLayout.setSpacing(2)
         
         self.processes_not_arrived_label = QLabel("Processes not yet arrived: 0")
         self.total_expected_time_label = QLabel("Total expected execution time: 0")
         
-        statistics_layout.addWidget(self.processes_not_arrived_label)
-        statistics_layout.addWidget(self.total_expected_time_label)
+        statisticsLayout.addWidget(self.processes_not_arrived_label)
+        statisticsLayout.addWidget(self.total_expected_time_label)
         
-        statistics_group.setLayout(statistics_layout)
-        self.main_layout.addWidget(statistics_group)
+        statisticsGroup.setLayout(statisticsLayout)
+        self.mainLayout.addWidget(statisticsGroup)
     
  
