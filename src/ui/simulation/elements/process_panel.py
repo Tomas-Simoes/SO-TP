@@ -60,8 +60,6 @@ class ProcessesPanel(QGroupBox):
         self.runningInformationLabels["completedTime"].setText(f"Completed Time: {completed}")
         self.runningInformationLabels["remainingTime"].setText(f"Remaining Time: {remaining}")
 
-
-
     @pyqtSlot(object)
     def updateReadyProcesses(self, processList: List[Process]):
         newPIDs = {process.pid for process in processList}
@@ -79,11 +77,44 @@ class ProcessesPanel(QGroupBox):
             pid = process.pid
             if pid not in self.readyProcessBlocks:
                 newProcessBlock = ProcessBlock(process)
+                newProcessBlock.clicked.connect(self.updateProcessInformation)
+
                 self.readyProcessBlocks[pid] = newProcessBlock
                 self.readyLayout.addWidget(newProcessBlock)
 
         self.updatePrioritiesSection(processList)
         self.updateStatistics(processList)
+
+    def updateProcessInformation(self, process: Process):
+        if not process:
+            for key in self.processInformationLabels:
+                self.processInformationLabels[key].setText(f"{key.replace('_', ' ').capitalize()}: N/A")
+            return
+
+        # Prepare the formatted values with fallback to "N/A"
+        pid = str(process.pid)
+        arrival = f"{process.arrivalTime:.2f}" if process.arrivalTime is not None else "N/A"
+        burst = f"{process.burstTime:.2f}" if process.burstTime is not None else "N/A"
+        priority = str(process.priority) if process.priority is not None else "N/A"
+        is_completed = "Yes" if process.is_completed else "No"
+        remaining = f"{process.remaining_time:.2f}" if process.remaining_time is not None else "N/A"
+        waiting = f"{process.waitingTime:.2f}" if process.waitingTime is not None else "N/A"
+        turnaround = f"{process.turnaroundTime:.2f}" if process.turnaroundTime is not None else "N/A"
+        start = f"{process.startTime:.2f}" if process.startTime is not None else "N/A"
+        status = str(getattr(process, "status", "N/A"))
+
+        # Set the texts
+        self.processInformationLabels["pid"].setText(f"PID: {pid}")
+        self.processInformationLabels["arrivalTime"].setText(f"Arrival Time: {arrival}")
+        self.processInformationLabels["burstTime"].setText(f"Burst Time: {burst}")
+        self.processInformationLabels["priority"].setText(f"Priority: {priority}")
+        self.processInformationLabels["isCompleted"].setText(f"Is Completed: {is_completed}")
+        self.processInformationLabels["remainingTime"].setText(f"Remaining Time: {remaining}")
+        self.processInformationLabels["waitingTime"].setText(f"Waiting time: {waiting}")
+        self.processInformationLabels["turnaroundTime"].setText(f"Turnaround time: {turnaround}")
+        self.processInformationLabels["startTime"].setText(f"Start time: {start}")
+        self.processInformationLabels["status"].setText(f"Status: {status}")
+
 
     def updatePrioritiesSection(self, processList: List[Process]):
         if len(processList) == 0:
@@ -223,7 +254,7 @@ class ProcessesPanel(QGroupBox):
         self.processInformationLabels = {
             "pid": QLabel("PID: No"),
             "arrivalTime": QLabel("Arrival Time: 0"),
-            "burstTime": QLabel("Burst Time: 0   (min: 0, max: 0)"),
+            "burstTime": QLabel("Burst Time: 0"),
             "priority": QLabel("Priority: 0"),
             "isCompleted": QLabel("Is Completed: No"),
             "remainingTime": QLabel("Remaining Time: 0"),
