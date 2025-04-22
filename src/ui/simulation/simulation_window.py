@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout, QGroupBox, QLabel, 
-    QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea, QFrame
+    QVBoxLayout, QHBoxLayout, QSizePolicy
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread
 
-from ui.simulation.elements.process_panel import ProcessesPanel  # Import the new class
+from ui.simulation.elements.process_panel import ProcessesPanel 
 from ui.simulation.elements.config_panel import ConfigPanel
+from ui.simulation.elements.clock_panel import ClockPanel
 
 from simulation import Simulation
 
@@ -13,35 +14,68 @@ class SimulationWindow(QMainWindow):
     def __init__(self, simulationConfig):
         super().__init__()
         self.setWindowTitle("Simulation Window")
-        self.resize(800, 600)
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-
-        main_layout = QGridLayout()
-        central_widget.setLayout(main_layout)
-
-        top_left_panel = ProcessesPanel(simulationConfig)
-        bottom_left_panel = ConfigPanel(simulationConfig)
-        top_right_panel = self.createBottomRightPanel()
-        bottom_right_panel = self.createBottomRightPanel()
-
-        # Add the panels to the grid layout
-        main_layout.addWidget(top_left_panel, 0, 0)
-        main_layout.addWidget(top_right_panel, 0, 1)
-        main_layout.addWidget(bottom_left_panel, 1, 0)
-        main_layout.addWidget(bottom_right_panel, 1, 1)
-
-        # Set equal stretch factors for all columns and rows
-        main_layout.setColumnStretch(0, 1)
-        main_layout.setColumnStretch(1, 1)
-        main_layout.setRowStretch(0, 1)
-        main_layout.setRowStretch(1, 1)
+        self.simulationConfig = simulationConfig
+        self.buildSimulationWindow()
 
         ## Class to do the actual simulation
-        Simulation(simulationConfig)
+        self.simulation = Simulation(simulationConfig)
+        self.initializeThreads()
+        self.subscribeEvents()
 
+        self.clockThread.start()
 
+    # Initializes our needed threads in order to not block main thread
+    #
+    #   - runTickBased() (from ClockWorker) runs on clockThread
+    def initializeThreads(self):
+        self.clockThread = QThread(self)
+        self.simulation.clockWorker.moveToThread(self.clockThread)
+        
+        self.clockThread.started.connect(self.simulation.clockWorker.runTickBased)        
+    
+    # Subscribe event's in other to update our GUI when some event occurs
+    def subscribeEvents(self):
+        self.simulation.clockWorker.updateClockDisplay.connect(self.clockPanel.updateDisplay)
+        self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
+
+    """
+        Builds the simulation window in the following format:
+        -------------------------------------
+        |   Processes Panel     |  Panel 2  |
+        | Config | Clock Panel  |  Panel 4  |
+        -------------------------------------
+    """
+    def buildSimulationWindow(self):
+        centralWidget = QWidget()
+        self.setCentralWidget(centralWidget)
+
+        mainLayout = QGridLayout()
+        centralWidget.setLayout(mainLayout)
+
+        # Creates the four panels, ready to implement on the Simulation Window
+        # where bottomLeftPanel is a combination of Config and Clock panels
+        self.processesPanel = self.createTopLeftPanel()
+        topRightPanel = self.createBottomRightPanel()
+        bottomLeftPanel = self.createBottomLeftPanel()
+        bottomRightPanel = self.createBottomRightPanel()
+
+        # Add the panels to the grid layout
+        mainLayout.addWidget(self.processesPanel, 0, 0)
+        mainLayout.addWidget(topRightPanel, 0, 1)
+        mainLayout.addWidget(bottomLeftPanel, 1, 0)
+        mainLayout.addWidget(bottomRightPanel, 1, 1)
+
+        # Set equal stretch factors for all columns and rows
+        mainLayout.setColumnStretch(0, 1)
+        mainLayout.setColumnStretch(1, 1)
+        mainLayout.setRowStretch(0, 1)
+        mainLayout.setRowStretch(1, 1)
+
+    def createTopLeftPanel(self):
+        return ProcessesPanel(self.simulationConfig)
+
+    # TODO
     def createTopRightPanel(self):
         top_right_panel = QGroupBox("Top Right Panel")
         top_right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -49,25 +83,25 @@ class SimulationWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Content for Top Right"))
         
-        # Add a stretch to ensure consistent sizing
         layout.addStretch(1)
         
         top_right_panel.setLayout(layout)
         return top_right_panel
 
+    # Creates two panels, Config and Clock, and attachs it to one bottomLeftPanel
     def createBottomLeftPanel(self):
-        bottom_left_panel = QGroupBox("Bottom Left Panel")
-        bottom_left_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        bottomLeftPanel = QWidget()
+        bottomLeftLayout = QHBoxLayout(bottomLeftPanel)
 
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel("Content for Bottom Left"))
-        
-        # Add a stretch to ensure consistent sizing
-        layout.addStretch(1)
-        
-        bottom_left_panel.setLayout(layout)
-        return bottom_left_panel
+        self.configPanel = ConfigPanel(self.simulationConfig)
+        self.clockPanel = ClockPanel()
+
+        bottomLeftLayout.addWidget(self.configPanel, stretch=1)
+        bottomLeftLayout.addWidget(self.clockPanel, stretch=1)
+
+        return bottomLeftPanel
     
+    # TODO
     def createBottomRightPanel(self):
         bottom_right_panel = QGroupBox("Bottom Right Panel")
         bottom_right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -75,7 +109,6 @@ class SimulationWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Content for Bottom Right"))
         
-        # Add a stretch to ensure consistent sizing
         layout.addStretch(1)
         
         bottom_right_panel.setLayout(layout)

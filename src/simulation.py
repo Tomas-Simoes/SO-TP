@@ -1,7 +1,7 @@
 from config.config import Config
 
-from clock import Clock
-from scheduler import Scheduler
+from clock import ClockWorker
+from scheduler import SchedulerWorker
 from processes.process_generation import ProcessGenerator
 
 class Simulation:
@@ -20,9 +20,10 @@ class Simulation:
                        else processGenerator.get_static_processes())
 
         # Responsible to decide which process to execute
-        self.scheduler = Scheduler(schedulingConfig)
+        self.schedulerWorker = SchedulerWorker(schedulingConfig)
 
         # Responsible for feading the Scheduler with a process when it arrives
-        self.clock = Clock(clockConfig, self.scheduler, processList)
-        self.clock.start()
+        self.clockWorker = ClockWorker(clockConfig, self.schedulerWorker, processList)
+        
+   
 

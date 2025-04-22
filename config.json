@@ -12,7 +12,7 @@
   },
   "clock": {
     "useRealTimeSimulation": true,
-    "tick": 0.1
+    "tick": 0.001
   },
   "scheduling": {
     "schedulingAlgorithm": "FCFS",

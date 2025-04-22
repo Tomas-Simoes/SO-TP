@@ -18,7 +18,7 @@ class ProcessBlock(QWidget):
         """)
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(0, 0, 0, 0)
         label_title = QLabel(f"Process\n  ID: {pid}")
         layout.addWidget(label_title)
         self.setLayout(layout)
