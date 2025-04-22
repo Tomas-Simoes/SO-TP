@@ -9,6 +9,7 @@ from typing import List
 
 class SchedulerWorker(QObject):
     updateProcessesDisplay = pyqtSignal(object)
+    updateRunningProcessDisplay = pyqtSignal(object)
     processStarted = pyqtSignal(Process)
     processCompleted = pyqtSignal(Process)
     

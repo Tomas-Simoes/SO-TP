@@ -39,6 +39,8 @@ class SimulationWindow(QMainWindow):
     def subscribeEvents(self):
         self.simulation.clockWorker.updateClockDisplay.connect(self.clockPanel.updateDisplay)
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
+        self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.runningProcessSection)
+
 
     """
         Builds the simulation window in the following format:
