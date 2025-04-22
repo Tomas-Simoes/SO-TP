@@ -40,6 +40,7 @@ class SimulationWindow(QMainWindow):
         self.simulation.clockWorker.updateClockDisplay.connect(self.clockPanel.updateDisplay)
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
         self.simulation.schedulerWorker.updateCompletedProcesses.connect(self.completedPanel.updateCompletedProcesses)
+        self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
 
 
     """

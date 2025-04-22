@@ -47,7 +47,7 @@ class CompletedPanel(QGroupBox):
         for process in processList:
             pid = process.pid
             if pid not in self.readyProcessBlocks:
-                newProcessBlock = ProcessBlock(pid)
+                newProcessBlock = ProcessBlock(process)
                 self.readyProcessBlocks[pid] = newProcessBlock
                 self.completedLayout.addWidget(newProcessBlock)
 
@@ -130,7 +130,6 @@ class CompletedPanel(QGroupBox):
 
         informationGroup.setLayout(informationLayout)
 
-        containerLayout.addWidget(ProcessBlock("2"))
         containerLayout.addWidget(informationGroup)
         containerGroup.setLayout(containerLayout)
         

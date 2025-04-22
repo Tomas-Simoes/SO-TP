@@ -34,6 +34,35 @@ class ProcessesPanel(QGroupBox):
         self.mainLayout.addStretch(1)
 
     @pyqtSlot(object)
+    def updateRunningProcess(self, process: Process):
+        if self.runningProcessBlock:
+            self.runningProcessLayout.removeWidget(self.runningProcessBlock)
+            self.runningProcessBlock.deleteLater()
+
+        self.runningProcessBlock = ProcessBlock(process)
+        self.runningProcessLayout.insertWidget(0, self.runningProcessBlock)
+
+        if not process:
+            for key in self.runningInformationLabels:
+                self.runningInformationLabels[key].setText(f"{key.capitalize()}: N/A")
+            
+            return
+
+        burst = f"{process.burstTime:.2f}" if process.burstTime is not None else "N/A"
+        start = f"{process.startTime:.2f}" if process.startTime is not None else "N/A"
+        completed = f"{process.completionTime:.2f}" if process.completionTime is not None else "N/A"
+        remaining = f"{process.remaining_time:.2f}" if process.remaining_time is not None else "N/A"
+
+        self.runningInformationLabels["pid"].setText(f"PID: {process.pid}")
+        self.runningInformationLabels["priority"].setText(f"Priority: {process.priority}")
+        self.runningInformationLabels["burstTime"].setText(f"Burst Time: {burst}")
+        self.runningInformationLabels["startTime"].setText(f"Start Time: {start}")
+        self.runningInformationLabels["completedTime"].setText(f"Completed Time: {completed}")
+        self.runningInformationLabels["remainingTime"].setText(f"Remaining Time: {remaining}")
+
+
+
+    @pyqtSlot(object)
     def updateReadyProcesses(self, processList: List[Process]):
         newPIDs = {process.pid for process in processList}
         oldPIDs = set(self.readyProcessBlocks.keys())
@@ -49,7 +78,7 @@ class ProcessesPanel(QGroupBox):
         for process in processList:
             pid = process.pid
             if pid not in self.readyProcessBlocks:
-                newProcessBlock = ProcessBlock(pid)
+                newProcessBlock = ProcessBlock(process)
                 self.readyProcessBlocks[pid] = newProcessBlock
                 self.readyLayout.addWidget(newProcessBlock)
 
@@ -101,16 +130,17 @@ class ProcessesPanel(QGroupBox):
     #  Current Running Process  | Statistics about that Processs
     def runningProcessSection(self):
         containerGroup = QGroupBox("Running Process")
-        containerLayout = QHBoxLayout()
+        runningProcessLayout = QHBoxLayout()
         
         # Process block on the left
-        containerLayout.addWidget(ProcessBlock("2"))
+        self.runningProcessBlock = ProcessBlock() 
+        runningProcessLayout.addWidget(self.runningProcessBlock)
         
         # Information group in the middle
         informationGroup = QGroupBox("Information")
         informationLayout = QVBoxLayout()
         
-        self.informationLabels = {
+        self.runningInformationLabels = {
             "pid": QLabel("PID: No"),
             "priority": QLabel("Priority: 0"),
             "burstTime": QLabel("Burst Time: 0"),
@@ -119,11 +149,11 @@ class ProcessesPanel(QGroupBox):
             "remainingTime": QLabel("Remaining Time: 0"),
         }
         
-        for label in self.informationLabels.values():
+        for label in self.runningInformationLabels.values():
             informationLayout.addWidget(label)
         
         informationGroup.setLayout(informationLayout)
-        containerLayout.addWidget(informationGroup)
+        runningProcessLayout.addWidget(informationGroup)
         
         # Create a widget to hold the image and apply left padding
         imageContainer = QWidget()
@@ -139,10 +169,11 @@ class ProcessesPanel(QGroupBox):
         imageLayout.addWidget(image)
         
         # Add the image container to the main layout
-        containerLayout.addWidget(imageContainer)
+        runningProcessLayout.addWidget(imageContainer)
         
-        containerGroup.setLayout(containerLayout)
+        containerGroup.setLayout(runningProcessLayout)
         self.mainLayout.addWidget(containerGroup)
+        self.runningProcessLayout = runningProcessLayout
 
     # Creates ready queue section, which contains a list of ProcessBlocks
     def readyQueueSection(self):
@@ -189,7 +220,7 @@ class ProcessesPanel(QGroupBox):
         informationLayout.setVerticalSpacing(2)
         informationLayout.setHorizontalSpacing(20)
 
-        self.informationLabels = {
+        self.processInformationLabels = {
             "pid": QLabel("PID: No"),
             "arrivalTime": QLabel("Arrival Time: 0"),
             "burstTime": QLabel("Burst Time: 0   (min: 0, max: 0)"),
@@ -203,14 +234,13 @@ class ProcessesPanel(QGroupBox):
         }
 
         # Add to grid layout in two columns
-        for i, label in enumerate(self.informationLabels.values()):
+        for i, label in enumerate(self.processInformationLabels.values()):
             row = i // 2
             col = i % 2
             informationLayout.addWidget(label, row, col)
 
         informationGroup.setLayout(informationLayout)
 
-        containerLayout.addWidget(ProcessBlock("2"))
         containerLayout.addWidget(informationGroup)
         containerGroup.setLayout(containerLayout)
         
