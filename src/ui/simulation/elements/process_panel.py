@@ -57,11 +57,14 @@ class ProcessesPanel(QGroupBox):
         self.updateStatistics(processList)
 
     def updatePrioritiesSection(self, processList: List[Process]):
+        if len(processList) == 0:
+            return
+
         priorityCounts = {i: 0 for i in range(10)}
 
         for process in processList:
             priorityCounts[process.priority] += 1
-        
+
         for priority, count in priorityCounts.items():
             self.prioritiesLabels.get(priority).setText(
                 f"Priority {priority} ({self.config['processGeneration']['priorities']['weights'][priority]:.2f}): {count} processes         ({(count / len(processList)) * 100:.2f}%)")

@@ -3,7 +3,7 @@ from processes.process import Process
 from typing import List, Optional
 
 class FCFS(Algorithm):
-    def __init__(self, time_quantum: float):
+    def __init__(self):
         super().__init__()
         self.ready_queue = []
     
