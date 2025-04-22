@@ -6,6 +6,7 @@ class Process:
         self.priority = priority
         
         self.remaining_time = burstTime
+        self.time_in_current_quantum = 0
         self.waitingTime = 0
         self.turnaroundTime = 0
         self.startTime = None

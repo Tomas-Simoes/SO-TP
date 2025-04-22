@@ -1,21 +1,21 @@
 from algorithms.algorithm import Algorithm
 from processes.process import Process
 from typing import List, Optional
+from collections import deque
 
 
 class RoundRobin(Algorithm):
     def __init__(self, time_quantum: float):
         super().__init__()
-        self.ready_queue = []
+        self.ready_queue = deque()
         self.time_quantum = time_quantum
-        self.index = -1
     
     def schedule(self) -> Optional[Process]:
         if not self.ready_queue:
             return None
-        # Get the shortestJob from the queue
-        self.index = (self.index + 1) % len(self.ready_queue)
-        return self.ready_queue[self.index]
+        
+        current_process = self.ready_queue.popleft()
+        return current_process
     
     def process_arrival(self, process: Process) -> None:
         print("Process arrived ", process)
@@ -23,8 +23,5 @@ class RoundRobin(Algorithm):
     
     def process_completion(self, process: Process) -> None:
         print("Process completed ", process)
-        if self.index > 0:
-            self.index -= 1
-            
         if process in self.ready_queue:
             self.ready_queue.remove(process)

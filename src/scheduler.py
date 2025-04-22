@@ -43,6 +43,7 @@ class SchedulerWorker(QObject):
         if self.currentProcess:
 
             # Execute one time unit
+            self.currentProcess.time_in_current_quantum += self.clockConfig.tick
             self.currentProcess.remaining_time -= self.clockConfig.tick
             
             # Check if process is completed
@@ -55,6 +56,15 @@ class SchedulerWorker(QObject):
                 self.readyProcesses.remove(completed_process)
                 
                 self._checkScheduling()
+                
+            # Check if the process current time quantuam is greater or equal to the desired time quantum 
+            # if it is we need to stop running that process and run the next one in the queue
+            elif self.currentProcess.time_in_current_quantum >= self.schedulingConfig.timeQuantum:
+                preempted_process = self.currentProcess
+                preempted_process.time_in_current_quantum = 0 
+                self.currentProcess = None
+                self.algorithm.ready_queue.append(preempted_process)
+                self._checkScheduling()  
         else:
             self._checkScheduling()
         
