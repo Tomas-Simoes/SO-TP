@@ -21,7 +21,7 @@ def create_algorithm(config: SchedulingConfig):
             return PriorityPreemptive()
         case "ROUND ROBIN":
             if config and config.timeQuantum:
-                return RoundRobin(time_quantum=config["time_quantum"])
+                return RoundRobin(time_quantum=config.timeQuantum)
             else:
                 raise ValueError("Time quantum must be specified for Round Robin scheduling")
         case "RATE MONOTONIC":

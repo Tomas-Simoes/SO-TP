@@ -19,7 +19,7 @@ class ClockWorker(QObject):
         tick_ms = int(self.config.tick * 1000)
         hours = minutes = seconds = milliseconds = total_ms = 0
 
-        while len(self.processList) != 0:
+        while (len(self.processList) > 0 or self.scheduler.hasRunningProcesses()):
             milliseconds += tick_ms
 
             if milliseconds >= 1000:
@@ -42,11 +42,16 @@ class ClockWorker(QObject):
             if newProcess:
                 self.processList.pop(0)
                 self.scheduler.receiveNewProcess(newProcess)
+                
+            self.scheduler.runSchedulingCycle()
             
             QThread.msleep(tick_ms)
 
     def checkNewArrivals(self, currentClock):
-        currentProcess = self.processList[0]
+        if self.processList:
+            currentProcess = self.processList[0]
+        else:
+            return None
 
         if currentProcess.arrivalTime <= currentClock:
             return currentProcess

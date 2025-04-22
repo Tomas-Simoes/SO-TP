@@ -1,7 +1,7 @@
 {
   "processGeneration": {
     "useProcessGeneration": true,
-    "maxTime": 30,
+    "maxTime": 15,
     "arrival": {"lambda": 4},
     "burst": {"lambda": 0.5},
     "priorities": {
@@ -12,7 +12,7 @@
   },
   "clock": {
     "useRealTimeSimulation": true,
-    "tick": 0.001
+    "tick": 1
   },
   "scheduling": {
     "schedulingAlgorithm": "FCFS",
