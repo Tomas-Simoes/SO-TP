@@ -20,7 +20,7 @@ class Simulation:
                        else processGenerator.get_static_processes())
 
         # Responsible to decide which process to execute
-        self.schedulerWorker = SchedulerWorker(schedulingConfig)
+        self.schedulerWorker = SchedulerWorker(schedulingConfig, clockConfig)
 
         # Responsible for feading the Scheduler with a process when it arrives
         self.clockWorker = ClockWorker(clockConfig, self.schedulerWorker, processList)
