@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 from processes.process import Process
 
 class ProcessBlock(QWidget):
+    clicked = pyqtSignal(object)
+
     def __init__(self, process: Process=None):
         super().__init__()
         self.setFixedSize(100, 50)
@@ -21,6 +23,13 @@ class ProcessBlock(QWidget):
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
-        label_title = QLabel(f"Process\n  ID: {process.pid if process else 0}")
-        layout.addWidget(label_title)
+
+        layout.addWidget(QLabel(f"Process\n  ID: {process.pid if process else 0}"))
         self.setLayout(layout)
+
+        self.process = process
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit(self.process)  
+
