@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread
 
 from ui.simulation.elements.process_panel import ProcessesPanel 
+from ui.simulation.elements.completed_panel import CompletedPanel 
 from ui.simulation.elements.config_panel import ConfigPanel
 from ui.simulation.elements.clock_panel import ClockPanel
 
@@ -56,13 +57,13 @@ class SimulationWindow(QMainWindow):
         # Creates the four panels, ready to implement on the Simulation Window
         # where bottomLeftPanel is a combination of Config and Clock panels
         self.processesPanel = self.createTopLeftPanel()
-        topRightPanel = self.createBottomRightPanel()
+        self.completedPanel = self.createTopRightPanel()
         bottomLeftPanel = self.createBottomLeftPanel()
         bottomRightPanel = self.createBottomRightPanel()
 
         # Add the panels to the grid layout
         mainLayout.addWidget(self.processesPanel, 0, 0)
-        mainLayout.addWidget(topRightPanel, 0, 1)
+        mainLayout.addWidget(self.completedPanel, 0, 1)
         mainLayout.addWidget(bottomLeftPanel, 1, 0)
         mainLayout.addWidget(bottomRightPanel, 1, 1)
 
@@ -77,16 +78,7 @@ class SimulationWindow(QMainWindow):
 
     # TODO
     def createTopRightPanel(self):
-        top_right_panel = QGroupBox("Top Right Panel")
-        top_right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel("Content for Top Right"))
-        
-        layout.addStretch(1)
-        
-        top_right_panel.setLayout(layout)
-        return top_right_panel
+        return CompletedPanel(self.simulationConfig)
 
     # Creates two panels, Config and Clock, and attachs it to one bottomLeftPanel
     def createBottomLeftPanel(self):

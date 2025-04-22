@@ -1,22 +1,21 @@
 from typing import Dict, List
 from PyQt6.QtWidgets import (
     QWidget, QGroupBox, QLabel, QVBoxLayout, QHBoxLayout, 
-    QSizePolicy, QScrollArea, QGridLayout
+    QSizePolicy, QScrollArea, QGridLayout, QFrame
 )
-from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt, pyqtSlot
 from ui.custom.process_block import ProcessBlock
 from processes.process import Process
 
 import math
 
-class ProcessesPanel(QGroupBox):
-    readyProcessBlocks: Dict[int, ProcessBlock]
+class CompletedPanel(QGroupBox):
+    completedProcessBlocks: Dict[int, ProcessBlock]
     prioritiesLabels: Dict[int, QLabel]
     statisticsLabels: List[QLabel]
 
     def __init__(self, config, parent=None):
-        super().__init__("Processes Panel", parent)
+        super().__init__("Complete Processes Panel", parent)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
         self.mainLayout = QVBoxLayout()
@@ -26,15 +25,14 @@ class ProcessesPanel(QGroupBox):
         self.readyProcessBlocks = {}
         self.prioritiesLabels = {}
         
-        self.runningProcessSection()
-        self.readyQueueSection()
-        self.processInformation()
-        self.prioritiesAndStatisticsSection()
+        self.completedProcessSection()
+        self.completedQueueSection()
+        self.statisticsSection()
 
         self.mainLayout.addStretch(1)
 
     @pyqtSlot(object)
-    def updateReadyProcesses(self, processList: List[Process]):
+    def updateCompletedProcesses(self, processList: List[Process]):
         newPIDs = {process.pid for process in processList}
         oldPIDs = set(self.readyProcessBlocks.keys())
 
@@ -42,7 +40,7 @@ class ProcessesPanel(QGroupBox):
 
         for pid in removedPIDs:
             removedBlock = self.readyProcessBlocks.pop(pid)
-            self.readyLayout.removeWidget(removedBlock)
+            self.completedLayout.removeWidget(removedBlock)
             removedBlock.setParent(None)
             removedBlock.deleteLater()            
 
@@ -51,7 +49,7 @@ class ProcessesPanel(QGroupBox):
             if pid not in self.readyProcessBlocks:
                 newProcessBlock = ProcessBlock(pid)
                 self.readyProcessBlocks[pid] = newProcessBlock
-                self.readyLayout.addWidget(newProcessBlock)
+                self.completedLayout.addWidget(newProcessBlock)
 
         self.updatePrioritiesSection(processList)
         self.updateStatistics(processList)
@@ -96,82 +94,7 @@ class ProcessesPanel(QGroupBox):
     # Creates running process section in the following format:
     #       
     #  Current Running Process  | Statistics about that Processs
-    def runningProcessSection(self):
-        containerGroup = QGroupBox("Running Process")
-        containerLayout = QHBoxLayout()
-        
-        # Process block on the left
-        containerLayout.addWidget(ProcessBlock("2"))
-        
-        # Information group in the middle
-        informationGroup = QGroupBox("Information")
-        informationLayout = QVBoxLayout()
-        
-        self.informationLabels = {
-            "pid": QLabel("PID: No"),
-            "priority": QLabel("Priority: 0"),
-            "burstTime": QLabel("Burst Time: 0"),
-            "startTime": QLabel("Start time: 0"),
-            "completedTime": QLabel("Completed Time: 0"),
-            "remainingTime": QLabel("Remaining Time: 0"),
-        }
-        
-        for label in self.informationLabels.values():
-            informationLayout.addWidget(label)
-        
-        informationGroup.setLayout(informationLayout)
-        containerLayout.addWidget(informationGroup)
-        
-        # Create a widget to hold the image and apply left padding
-        imageContainer = QWidget()
-        imageLayout = QHBoxLayout(imageContainer)
-        
-        # Set left margin to add padding (adjust the value as needed)
-        imageLayout.setContentsMargins(100, 0, 0, 0)  # Left: 20px, others: 0px
-        
-        # Add the image to the layout
-        image = QLabel()
-        pixmap = QPixmap("./image_cropped.png")
-        image.setPixmap(pixmap)
-        imageLayout.addWidget(image)
-        
-        # Add the image container to the main layout
-        containerLayout.addWidget(imageContainer)
-        
-        containerGroup.setLayout(containerLayout)
-        self.mainLayout.addWidget(containerGroup)
-
-    # Creates ready queue section, which contains a list of ProcessBlocks
-    def readyQueueSection(self):
-        readyQueueGroup = QGroupBox("Ready Process Queue")
-        readyQueueGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        
-        scrollArea = QScrollArea()
-        scrollArea.setWidgetResizable(True)
-        scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        scrollWidget = QWidget()
-        readyLayout = QHBoxLayout(scrollWidget)
-        readyLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        readyLayout.setContentsMargins(0, 0, 0, 0)
-        readyLayout.setSpacing(10)  
-        
-        scrollArea.setWidget(scrollWidget)
-        
-        readyQueueLayout = QVBoxLayout()
-        readyQueueLayout.addWidget(scrollArea)
-        readyQueueGroup.setLayout(readyQueueLayout)
-        readyQueueGroup.setMaximumHeight(150)
-        readyQueueLayout.setContentsMargins(0, 0, 0, 0)
-        readyQueueLayout.setSpacing(0)
-
-        self.mainLayout.addWidget(readyQueueGroup)
-
-        self.readyLayout = readyLayout
-        self.readyQueueGroup = readyQueueGroup
-
-    def processInformation(self):
+    def completedProcessSection(self):
         containerGroup = QGroupBox("Process Information (press one in Ready Queue)")
         containerGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
@@ -213,39 +136,35 @@ class ProcessesPanel(QGroupBox):
         
         self.mainLayout.addWidget(containerGroup)
     
-    def prioritiesAndStatisticsSection(self):
-        containerGroup = QGroupBox("Statistics")
-        containerGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-
-        # Horizontal layout to hold both sections
-        containerLayout = QHBoxLayout()
-        containerLayout.setSpacing(20)
-
-        containerLayout.addWidget(self.prioritiesSection())
-        containerLayout.addWidget(self.statisticsSection())
-        containerGroup.setLayout(containerLayout)
+    # Creates ready queue section, which contains a list of ProcessBlocks
+    def completedQueueSection(self):
+        completedQueueGroup = QGroupBox("Completed Process Queue")
+        completedQueueGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         
-        self.mainLayout.addWidget(containerGroup)
+        scrollArea = QScrollArea()
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
+        scrollWidget = QWidget()
+        completedLayout = QHBoxLayout(scrollWidget)
+        completedLayout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        completedLayout.setContentsMargins(0, 0, 0, 0)
+        completedLayout.setSpacing(10)  
+        
+        scrollArea.setWidget(scrollWidget)
+        
+        completedQueueLayout = QVBoxLayout()
+        completedQueueLayout.addWidget(scrollArea)
+        completedQueueGroup.setLayout(completedQueueLayout)
+        completedQueueGroup.setMaximumHeight(150)
+        completedQueueLayout.setContentsMargins(0, 0, 0, 0)
+        completedQueueLayout.setSpacing(0)
 
-    def prioritiesSection(self):
-        prioritiesGroup = QGroupBox("Priorities (Weight%)")
-        prioritiesGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        
-        prioritiesLayout = QGridLayout()
-        prioritiesLayout.setVerticalSpacing(2)
-        prioritiesLayout.setHorizontalSpacing(10)
-        
-        for i in range(10):
-            row = i % 5
-            col = i // 5
-            label = QLabel(f"Priority {i} ({self.config['processGeneration']['priorities']['weights'][i]}): None")
-            prioritiesLayout.addWidget(label, row, col)
+        self.mainLayout.addWidget(completedQueueGroup)
 
-            self.prioritiesLabels[i] = label
-        
-        prioritiesGroup.setLayout(prioritiesLayout)
-        return prioritiesGroup
+        self.completedLayout = completedLayout
+        self.completedQueueGroup = completedQueueGroup
     
     def statisticsSection(self):
         # Statistics section
@@ -256,17 +175,17 @@ class ProcessesPanel(QGroupBox):
         statisticsLayout.setSpacing(2)
 
         self.statisticsLabels = {
-            "totalNumber": QLabel("Total number of processes: 0"),
-            "totalExpectedTime": QLabel("Total expected execution time: 0"),
-            "averageExecutionTime": QLabel("Average Execution Time: 0   (min: 0, max: 0)"),
-            "averageInterArrivalTime": QLabel("Average Inter-Arrival Time: 0"),
-            "standardDeviation": QLabel("Standard Deviation of Burst Time: 0")
+            "averageCompletitionTime": QLabel("Average Completition time: 0   (min: 0, max: 0)"),
+            "averageTurnaroundTime": QLabel("Average Turnaround time: 0   (min: 0, max: 0)"),
+            "averageWaitingTime": QLabel("Average Turnaround time: 0   (min: 0, max: 0)"),
+            "turnaroundVariance": QLabel("Turnaround variance: 0"),
+            "processSwitchCount": QLabel("Process switch count: 0")
         }
         
         for label in self.statisticsLabels.values():
             statisticsLayout.addWidget(label)
         
         statisticsGroup.setLayout(statisticsLayout)
-        return statisticsGroup
-
+        self.mainLayout.addWidget(statisticsGroup)
+    
  
