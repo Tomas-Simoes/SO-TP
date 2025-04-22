@@ -10,6 +10,11 @@ class PrioritiesConfig:
     def __init__(self, config_dict):
         self.values = config_dict["values"]
         self.weights = config_dict["weights"]
+        
+class PeriodsConfig:
+    def __init__(self, config_dict):
+        self.values = config_dict["values"]
+        self.weights = config_dict["weights"]
 
 class ProcessGenerationConfig:
     def __init__(self, config_dict):
@@ -19,3 +24,4 @@ class ProcessGenerationConfig:
         self.arrival = ArrivalConfig(config_dict["arrival"])
         self.burst = BurstConfig(config_dict["burst"])
         self.priorities = PrioritiesConfig(config_dict["priorities"])
+        self.periods = PeriodsConfig(config_dict["periods"])

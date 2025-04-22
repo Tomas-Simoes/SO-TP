@@ -27,7 +27,7 @@ class ClockConfigPanel(QGroupBox):
         tickDuration.setObjectName("tickDuration")
         
         useRealTime.setChecked(False)
-        tickDuration.setValue(0.1)
+        tickDuration.setValue(1)
 
         if clockConfig:
             useRealTime.setChecked(clockConfig.get("useRealTimeSimulation", False))

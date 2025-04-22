@@ -1,9 +1,48 @@
 from .algorithm import Algorithm
+from processes.process import Process
+from typing import List, Optional
 
 class PriorityNonPreemptive(Algorithm):
-    def schedule(self):
-        return
+    def __init__(self):
+        super().__init__()
+        self.ready_queue = []
+    
+    def schedule(self) -> Optional[Process]:
+        if not self.ready_queue:
+            return None
+        
+        highest_priority = min(self.ready_queue, key=lambda process: process.priority)
+        return highest_priority
+    
+    def process_arrival(self, process: Process) -> None:
+        print("Process arrived ", process)
+        self.ready_queue.append(process)
+    
+    def process_completion(self, process: Process) -> None:
+        print("Process completed ", process)
+        if process in self.ready_queue:
+            self.ready_queue.remove(process)
     
 class PriorityPreemptive(Algorithm):
-    def schedule(self):
-        return
+    def __init__(self):
+        super().__init__()
+        self.ready_queue = []
+    
+    def schedule(self) -> Optional[Process]:
+        if not self.ready_queue:
+            return None
+        
+        highest_priority = min(self.ready_queue, key=lambda process: process.priority)
+        return highest_priority
+    
+    def process_arrival(self, process: Process) -> None:
+        print("Process arrived ", process)
+        self.ready_queue.append(process)
+    
+    def process_completion(self, process: Process) -> None:
+        print("Process completed ", process)
+        if process in self.ready_queue:
+            self.ready_queue.remove(process)
+
+    def process_preemption(self, process: Process, reason: str) -> None:
+        print(f"Process preempted  {process} due to {reason}")

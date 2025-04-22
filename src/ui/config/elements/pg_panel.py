@@ -48,7 +48,7 @@ class PGConfigPanel(QGroupBox):
         
         if pgConfigurations:
             useRandomGen.setChecked(pgConfigurations.get("useProcessGeneration", True))
-            maxTime.setValue(pgConfigurations.get("maxTime", 30))
+            maxTime.setValue(pgConfigurations.get("maxTime", 5))
             arrivalLambda.setValue(pgConfigurations.get("arrival", {}).get("lambda", 4.0))
             burstLambda.setValue(pgConfigurations.get("burst", {}).get("lambda", 0.5))
             seed.setValue(pgConfigurations.get("seed", 57))
@@ -87,6 +87,10 @@ class PGConfigPanel(QGroupBox):
             "arrival": {"lambda": arrivalLambda},
             "burst": {"lambda": burstLambda},
             "priorities": {
+                "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                "weights": [0.25, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.04, 0.02, 0.01]
+            },
+            "periods": {
                 "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
                 "weights": [0.25, 0.20, 0.15, 0.10, 0.08, 0.07, 0.05, 0.04, 0.02, 0.01]
             },

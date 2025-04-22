@@ -10,7 +10,6 @@ class ShortestJob(Algorithm):
     def schedule(self) -> Optional[Process]:
         if not self.ready_queue:
             return None
-        print("Ready Queue : " + ", ".join(str(p) for p in self.ready_queue) + "\n")
         # Get the shortestJob from the queue
         shortestJob = min(self.ready_queue, key=lambda process: process.burstTime)
         return shortestJob

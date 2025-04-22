@@ -19,9 +19,10 @@ class ProcessGenerator:
 
         burstTimes = self.generate_burstTimes(self.config.burst.lam, numProcesses)
         priorityList = self.generate_priorities(self.config.priorities.values, self.config.priorities.weights, numProcesses)
+        periodList = self.generate_periods(self.config.periods.values, self.config.periods.weights, numProcesses)
 
         for i in range(numProcesses):
-            process = Process(self.generate_pid(), arrivalTimes[i], burstTimes[i], priorityList[i])
+            process = Process(self.generate_pid(), arrivalTimes[i], burstTimes[i], priorityList[i], periodList[i])
             processList.append(process)
         
         return processList
@@ -87,6 +88,9 @@ class ProcessGenerator:
     """
     def generate_priorities(self, priorities, weights, numProcesses):
         return random.choices(priorities, weights=weights, k=numProcesses)
+    
+    def generate_periods(self, periods, weights, numProcesses):
+        return random.choices(periods, weights=weights, k=numProcesses)
 
     """
         Generates an PID (Process ID) from the previous ID

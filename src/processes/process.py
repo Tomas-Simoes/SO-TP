@@ -1,9 +1,10 @@
 class Process:
-    def __init__(self, pid, arrivalTime, burstTime, priority):
+    def __init__(self, pid, arrivalTime, burstTime, priority, period):
         self.pid = pid
         self.arrivalTime = arrivalTime
         self.burstTime = burstTime
         self.priority = priority
+        self.period = period
         
         self.remaining_time = burstTime
         self.time_in_current_quantum = 0
@@ -27,5 +28,5 @@ class Process:
         return self.remaining_time <= 0
         
     def __str__(self):
-        return f"Process {self.pid}: start={self.arrivalTime}, burst={self.burstTime}, priority={self.priority}"
+        return f"Process {self.pid}: start={self.arrivalTime}, burst={self.burstTime}, priority={self.priority}, period={self.period}"
     
