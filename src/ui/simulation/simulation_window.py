@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout, QGroupBox, QLabel, 
-    QVBoxLayout, QHBoxLayout, QSizePolicy
+    QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea
 )
 from PyQt6.QtCore import Qt, QThread
 
@@ -51,11 +51,8 @@ class SimulationWindow(QMainWindow):
         -------------------------------------
     """
     def buildSimulationWindow(self):
-        centralWidget = QWidget()
-        self.setCentralWidget(centralWidget)
-
-        mainLayout = QGridLayout()
-        centralWidget.setLayout(mainLayout)
+        content = QWidget()
+        contentLayout = QGridLayout(content)
 
         # Creates the four panels, ready to implement on the Simulation Window
         # where bottomLeftPanel is a combination of Config and Clock panels
@@ -64,17 +61,30 @@ class SimulationWindow(QMainWindow):
         bottomLeftPanel = self.createBottomLeftPanel()
         bottomRightPanel = self.createBottomRightPanel()
 
-        # Add the panels to the grid layout
-        mainLayout.addWidget(self.processesPanel, 0, 0)
-        mainLayout.addWidget(self.completedPanel, 0, 1)
-        mainLayout.addWidget(bottomLeftPanel, 1, 0)
-        mainLayout.addWidget(bottomRightPanel, 1, 1)
 
-        # Set equal stretch factors for all columns and rows
-        mainLayout.setColumnStretch(0, 1)
-        mainLayout.setColumnStretch(1, 1)
-        mainLayout.setRowStretch(0, 1)
-        mainLayout.setRowStretch(1, 1)
+        # Add the panels to the grid layout
+        contentLayout.addWidget(self.processesPanel, 0, 0)
+        contentLayout.addWidget(self.completedPanel, 0, 1)
+        contentLayout.addWidget(bottomLeftPanel, 1, 0)
+        contentLayout.addWidget(bottomRightPanel, 1, 1)
+
+        contentLayout.setColumnStretch(0, 1)
+        contentLayout.setColumnStretch(1, 1)
+        contentLayout.setRowStretch(0, 1)
+        contentLayout.setRowStretch(1, 1)
+
+        # Enable scrolling for lower resolutions
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(content)
+
+        content.setMinimumSize(0, 0)
+        content.setSizePolicy(
+            QWidget().sizePolicy().Policy.Ignored,
+            QWidget().sizePolicy().Policy.Ignored
+        )
+
+        self.setCentralWidget(scroll)
 
     def createTopLeftPanel(self):
         return ProcessesPanel(self.simulationConfig)
