@@ -11,7 +11,7 @@ from typing import List
 class SchedulerWorker(QObject):
     updateProcessesDisplay = pyqtSignal(object)
     updateRunningProcessDisplay = pyqtSignal(object)
-    updateCompletedProcesses = pyqtSignal(object)
+    updateCompletedProcessesDisplay = pyqtSignal(object, int)
     processStarted = pyqtSignal(Process)
     processCompleted = pyqtSignal(Process)
     processPreempted = pyqtSignal(Process, str)
@@ -26,6 +26,7 @@ class SchedulerWorker(QObject):
         self.currentProcess = None
         self.current_time = 0
         self.updateUITime = 0
+        self.processSwitchCount = 0
         
     def receiveNewProcess(self, newProcess: Process):
         # Add new process to our list and notify algorithm
@@ -87,6 +88,8 @@ class SchedulerWorker(QObject):
         if self.updateUITime >= 0.1: 
             self.updateProcessesDisplay.emit(self.readyProcesses)
             self.updateRunningProcessDisplay.emit(self.currentProcess)
+            self.updateCompletedProcessesDisplay.emit(self.completedProcesses, self.processSwitchCount)
+
             self.updateUITime = 0
 
         # self.updateCompletedProcesses.emit(self.completedProcesses)
@@ -99,6 +102,7 @@ class SchedulerWorker(QObject):
         if not self.currentProcess:
             next_process = self.algorithm.schedule()
             if next_process:
+                self.processSwitchCount += 1
                 self.currentProcess = next_process
                 self.processStarted.emit(next_process)
     

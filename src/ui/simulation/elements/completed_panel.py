@@ -28,11 +28,12 @@ class CompletedPanel(QGroupBox):
         self.completedProcessSection()
         self.completedQueueSection()
         self.statisticsSection()
+        
 
         self.mainLayout.addStretch(1)
 
-    @pyqtSlot(object)
-    def updateCompletedProcesses(self, processList: List[Process]):
+    @pyqtSlot(object, int)
+    def updateCompletedProcesses(self, processList: List[Process], processSwitchCount):
         newPIDs = {process.pid for process in processList}
         oldPIDs = set(self.readyProcessBlocks.keys())
 
@@ -48,52 +49,78 @@ class CompletedPanel(QGroupBox):
             pid = process.pid
             if pid not in self.readyProcessBlocks:
                 newProcessBlock = ProcessBlock(process)
+                newProcessBlock.clicked.connect(self.updateCompletedProcessInformation)
+
                 self.readyProcessBlocks[pid] = newProcessBlock
                 self.completedLayout.addWidget(newProcessBlock)
 
-        self.updatePrioritiesSection(processList)
-        self.updateStatistics(processList)
+        #self.updatePrioritiesSection(processList)
+        self.updateStatistics(processList, processSwitchCount)
 
-    def updatePrioritiesSection(self, processList: List[Process]):
-        priorityCounts = {i: 0 for i in range(10)}
-
-        for process in processList:
-            priorityCounts[process.priority] += 1
-        
-        for priority, count in priorityCounts.items():
-            self.prioritiesLabels.get(priority).setText(
-                f"Priority {priority} ({self.config['processGeneration']['priorities']['weights'][priority]:.2f}): {count} processes         ({(count / len(processList)) * 100:.2f}%)")
-
-    def updateStatistics(self, processList: List[Process]):
+    def updateStatistics(self, processList: List[Process], processSwitchCount):
         numProcesses = len(processList)
         
         if numProcesses == 0:
             return  
+        
+        self.statisticsLabels["totalProcessCompleted"].setText(f"Total processes completed: {numProcesses}")
 
-        totalBurstTimes = sum(process.burstTime for process in processList)
-        self.statisticsLabels["totalExpectedTime"].setText(f"Total expected execution time: {totalBurstTimes:.2f}")
-        
-        # Average execution time        
-        averageBurstTime = totalBurstTimes / numProcesses
-        minBurstTime = min(process.burstTime for process in processList)
-        maxBurstTime = max(process.burstTime for process in processList)
-        self.statisticsLabels["averageExecutionTime"].setText(f"Average Execution Time: {averageBurstTime:.2f}   (min: {minBurstTime:.2f}, max: {maxBurstTime:.2f})")
-        
-        # Standard Deviation of burst time
-        standardDeviation = math.sqrt(sum((process.burstTime - averageBurstTime) ** 2 for process in processList) / numProcesses)
-        self.statisticsLabels["standardDeviation"].setText(f"Standard Deviation of Burst Time: {standardDeviation:.2f}")
-        
-        # Average inter-arrival time
-        sortedArrivalTimes = sorted(process.arrivalTime for process in processList)
-        averageInterArrivalTime = sum(sortedArrivalTimes[i+1] - sortedArrivalTimes[i] for i in range(len(sortedArrivalTimes) - 1)) / (numProcesses - 1) if numProcesses > 1 else 0
-        self.statisticsLabels["averageInterArrivalTime"].setText(f"Average Inter-Arrival Time: {averageInterArrivalTime:.2f}")
-        
-        # Total number of processes
-        self.statisticsLabels["totalNumber"].setText(f"Total number of processes: {numProcesses}")
+        completionTimes = [process.completionTime for process in processList if process.completionTime is not None]
+        if completionTimes:
+            avgCompletionTime = sum(completionTimes) / len(completionTimes)
+            self.statisticsLabels["averageCompletitionTime"].setText(f"Average Completion time: {avgCompletionTime:.2f} (min: {min(completionTimes):.2f}, max: {max(completionTimes):.2f})")
 
-    # Creates running process section in the following format:
-    #       
-    #  Current Running Process  | Statistics about that Processs
+        # Calculate turnaround time statistics
+        turnaroundTimes = [process.turnaroundTime for process in processList if process.turnaroundTime > 0]
+        if turnaroundTimes:
+            avgTurnaroundTime = sum(turnaroundTimes) / len(turnaroundTimes)
+            self.statisticsLabels["averageTurnaroundTime"].setText(f"Average Turnaround time: {avgTurnaroundTime:.2f} (min: {min(turnaroundTimes):.2f}, max: {max(turnaroundTimes):.2f})")
+        
+            # Calculate turnaround variance
+            turnaroundVariance = sum((t - avgTurnaroundTime) ** 2 for t in turnaroundTimes) / len(turnaroundTimes)
+            self.statisticsLabels["turnaroundVariance"].setText(f"Turnaround variance: {turnaroundVariance:.2f}")
+
+        # Calculate waiting time statistics
+        waitingTimes = [process.waitingTime for process in processList if process.waitingTime >= 0]
+        if waitingTimes:
+            avgWaitingTime = sum(waitingTimes) / len(waitingTimes)
+            self.statisticsLabels["averageWaitingTime"].setText(f"Average Waiting time: {avgWaitingTime:.2f} (min: {min(waitingTimes):.2f}, max: {max(waitingTimes):.2f})")
+
+        # Process Switch Count
+        self.statisticsLabels["processSwitchCount"].setText(f"Process switch count: {processSwitchCount}")
+
+    def updateCompletedProcessInformation(self, process):
+        if not process:
+            for key in self.processInformationLabels:
+                self.processInformationLabels[key].setText(f"{key.replace('_', ' ').capitalize()}: N/A")
+            return
+
+        # Prepare the formatted values with fallback to "N/A"
+        pid = str(process.pid)
+        arrival = f"{process.arrivalTime:.2f}" if process.arrivalTime is not None else "N/A"
+        burst = f"{process.burstTime:.2f}" if process.burstTime is not None else "N/A"
+        priority = str(process.priority) if process.priority is not None else "N/A"
+        is_completed = "Yes" if process.is_completed else "No"
+        remaining = f"{process.remaining_time:.2f}" if process.remaining_time is not None else "N/A"
+        waiting = f"{process.waitingTime:.2f}" if process.waitingTime is not None else "N/A"
+        turnaround = f"{process.turnaroundTime:.2f}" if process.turnaroundTime is not None else "N/A"
+        start = f"{process.startTime:.2f}" if process.startTime is not None else "N/A"
+        status = str(getattr(process, "status", "N/A"))
+
+        # Set the texts
+        self.processInformationLabels["pid"].setText(f"PID: {pid}")
+        self.processInformationLabels["arrivalTime"].setText(f"Arrival Time: {arrival}")
+        self.processInformationLabels["burstTime"].setText(f"Burst Time: {burst}")
+        self.processInformationLabels["priority"].setText(f"Priority: {priority}")
+        self.processInformationLabels["isCompleted"].setText(f"Is Completed: {is_completed}")
+        self.processInformationLabels["remainingTime"].setText(f"Remaining Time: {remaining}")
+        self.processInformationLabels["waitingTime"].setText(f"Waiting time: {waiting}")
+        self.processInformationLabels["turnaroundTime"].setText(f"Turnaround time: {turnaround}")
+        self.processInformationLabels["startTime"].setText(f"Start time: {start}")
+        self.processInformationLabels["status"].setText(f"Status: {status}")
+
+
+    # Creates a section that let's you see a completed process information
     def completedProcessSection(self):
         containerGroup = QGroupBox("Process Information (press one in Ready Queue)")
         containerGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -109,7 +136,7 @@ class CompletedPanel(QGroupBox):
         informationLayout.setVerticalSpacing(2)
         informationLayout.setHorizontalSpacing(20)
 
-        self.informationLabels = {
+        self.processInformationLabels = {
             "pid": QLabel("PID: No"),
             "arrivalTime": QLabel("Arrival Time: 0"),
             "burstTime": QLabel("Burst Time: 0   (min: 0, max: 0)"),
@@ -123,7 +150,7 @@ class CompletedPanel(QGroupBox):
         }
 
         # Add to grid layout in two columns
-        for i, label in enumerate(self.informationLabels.values()):
+        for i, label in enumerate(self.processInformationLabels.values()):
             row = i // 2
             col = i % 2
             informationLayout.addWidget(label, row, col)
@@ -135,7 +162,7 @@ class CompletedPanel(QGroupBox):
         
         self.mainLayout.addWidget(containerGroup)
     
-    # Creates ready queue section, which contains a list of ProcessBlocks
+    # Creates completed queue section, which contains a list of completed ProcessBlocks
     def completedQueueSection(self):
         completedQueueGroup = QGroupBox("Completed Process Queue")
         completedQueueGroup.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -174,6 +201,7 @@ class CompletedPanel(QGroupBox):
         statisticsLayout.setSpacing(2)
 
         self.statisticsLabels = {
+            "totalProcessCompleted": QLabel("Total processes completed: 0"),
             "averageCompletitionTime": QLabel("Average Completition time: 0   (min: 0, max: 0)"),
             "averageTurnaroundTime": QLabel("Average Turnaround time: 0   (min: 0, max: 0)"),
             "averageWaitingTime": QLabel("Average Turnaround time: 0   (min: 0, max: 0)"),
