@@ -41,7 +41,7 @@ class SimulationWindow(QMainWindow):
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
         self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
         self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.completedPanel.updateCompletedProcesses)
-
+        self.simulation.schedulerWorker.updateCompletedOverTimeGraph.connect(self.clockPanel.updateCompletionOverTimeGraph)
 
     """
         Builds the simulation window in the following format:

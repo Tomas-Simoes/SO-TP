@@ -4,12 +4,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt, pyqtSlot
-from ui.custom.process_block import ProcessBlock
 
+from ui.custom.process_block import ProcessBlock
+from ui.graphs.completedOverTimeGraph import CompletionOverTimeGraph
 class ClockPanel(QGroupBox):
     def __init__(self, parent=None):
         super().__init__("Time Panel", parent)
-
         self.main_layout = QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)  
         self.main_layout.setSpacing(0)  
@@ -47,7 +47,10 @@ class ClockPanel(QGroupBox):
         clock_layout.addWidget(seconds)
         clock_layout.addWidget(milliseconds)
 
+        self.completionOverTimeGraph = CompletionOverTimeGraph()
+
         self.main_layout.addWidget(clock_widget, 0, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.main_layout.addWidget(self.completionOverTimeGraph)
         self.main_layout.addStretch(1) 
 
         self.hours = hours 
@@ -57,7 +60,12 @@ class ClockPanel(QGroupBox):
     
     @pyqtSlot(int, int, int, int)
     def updateDisplay(self, hours, minutes, seconds, milliseconds):
+        self.total_ms = (hours * 3600 * 1000) + (minutes * 60 * 1000) + (seconds * 1000) + milliseconds
         self.hours.setText(f"{hours:02d}")
         self.minutes.setText(f"{minutes:02d}")
         self.seconds.setText(f"{seconds:02d}")
         self.milliseconds.setText(f"{milliseconds:03d}")
+
+    @pyqtSlot(int)
+    def updateCompletionOverTimeGraph(self, completionCount):
+        self.completionOverTimeGraph.addNewPoint(self.total_ms, completionCount)

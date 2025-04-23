@@ -12,6 +12,7 @@ class SchedulerWorker(QObject):
     updateProcessesDisplay = pyqtSignal(object)
     updateRunningProcessDisplay = pyqtSignal(object)
     updateCompletedProcessesDisplay = pyqtSignal(object, int)
+    updateCompletedOverTimeGraph = pyqtSignal(int)
     processStarted = pyqtSignal(Process)
     processCompleted = pyqtSignal(Process)
     processPreempted = pyqtSignal(Process, str)
@@ -56,6 +57,9 @@ class SchedulerWorker(QObject):
                 self.algorithm.process_completion(completed_process)
                 self.processCompleted.emit(completed_process)
                 self.completedProcesses.append(completed_process)
+
+                # when a new process is completed, send signal to update CompletedProcess over Time graph
+                self.updateCompletedOverTimeGraph.emit(len(self.completedProcesses))
                 if completed_process in self.readyProcesses:
                     self.readyProcesses.remove(completed_process)
                 
