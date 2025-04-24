@@ -110,3 +110,20 @@ class SchedulerWorker(QObject):
                 self.currentProcess = next_process
                 self.processStarted.emit(next_process)
     
+def getAllProcesses(self):
+    # Combine todas as listas de processos relevantes
+    all_processes = []
+    
+    # Adicionar processos prontos
+    if self.readyProcesses:
+        all_processes.extend(self.readyProcesses)
+    
+    # Adicionar processo em execução se existir
+    if self.currentProcess is not None:
+        all_processes.append(self.currentProcess)
+    
+    # Adicionar processos completados
+    if self.completedProcesses:
+        all_processes.extend(self.completedProcesses)
+    
+    return all_processes

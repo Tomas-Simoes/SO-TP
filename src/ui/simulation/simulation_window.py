@@ -8,6 +8,7 @@ from ui.simulation.elements.process_panel import ProcessesPanel
 from ui.simulation.elements.completed_panel import CompletedPanel 
 from ui.simulation.elements.config_panel import ConfigPanel
 from ui.simulation.elements.clock_panel import ClockPanel
+from ui.graphs.ganttGraph import GanttChartWidget
 
 from simulation import Simulation
 
@@ -17,10 +18,10 @@ class SimulationWindow(QMainWindow):
         self.setWindowTitle("Simulation Window")
 
         self.simulationConfig = simulationConfig
-        self.buildSimulationWindow()
-
         ## Class to do the actual simulation
         self.simulation = Simulation(simulationConfig)
+
+        self.buildSimulationWindow()
         self.initializeThreads()
         self.subscribeEvents()
 
@@ -42,6 +43,15 @@ class SimulationWindow(QMainWindow):
         self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
         self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.completedPanel.updateCompletedProcesses)
         self.simulation.schedulerWorker.updateCompletedOverTimeGraph.connect(self.clockPanel.updateCompletionOverTimeGraph)
+        self.simulation.schedulerWorker.updateProcessesDisplay.connect(
+        lambda processes: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
+    )
+        self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(
+        lambda _: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
+    )
+        self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(
+        lambda processes, count: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
+    )
 
     """
         Builds the simulation window in the following format:
@@ -86,6 +96,7 @@ class SimulationWindow(QMainWindow):
 
         self.setCentralWidget(scroll)
 
+
     def createTopLeftPanel(self):
         return ProcessesPanel(self.simulationConfig)
 
@@ -108,13 +119,34 @@ class SimulationWindow(QMainWindow):
     
     # TODO
     def createBottomRightPanel(self):
-        bottom_right_panel = QGroupBox("Bottom Right Panel")
+        bottom_right_panel = QGroupBox("Scheduling Gantt Chart")
         bottom_right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Content for Bottom Right"))
-        
+
+        self.ganttChart = GanttChartWidget([])
+        layout.addWidget(self.ganttChart)
+
         layout.addStretch(1)
         
         bottom_right_panel.setLayout(layout)
         return bottom_right_panel
+    
+def updateGanttChart(self):
+    # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
+    all_processes = []
+    
+    # Adicionar processos prontos
+    if hasattr(self.simulation.schedulerWorker, 'readyProcesses'):
+        all_processes.extend(self.simulation.schedulerWorker.readyProcesses)
+    
+    # Adicionar processo em execução se existir
+    if hasattr(self.simulation.schedulerWorker, 'currentProcess') and self.simulation.schedulerWorker.currentProcess is not None:
+        all_processes.append(self.simulation.schedulerWorker.currentProcess)
+    
+    # Adicionar processos completados
+    if hasattr(self.simulation.schedulerWorker, 'completedProcesses'):
+        all_processes.extend(self.simulation.schedulerWorker.completedProcesses)
+    
+    # Atualizar o gráfico Gantt
+    self.ganttChart.updateGantt(all_processes)
