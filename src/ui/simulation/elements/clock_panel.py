@@ -7,6 +7,8 @@ from PyQt6.QtCore import Qt, pyqtSlot
 
 from ui.custom.process_block import ProcessBlock
 from ui.graphs.completedOverTimeGraph import CompletionOverTimeGraph
+
+from clock import GlobalClock
 class ClockPanel(QGroupBox):
     def __init__(self, parent=None):
         super().__init__("Time Panel", parent)
@@ -58,14 +60,19 @@ class ClockPanel(QGroupBox):
         self.seconds = seconds 
         self.milliseconds = milliseconds
     
-    @pyqtSlot(int, int, int, int)
-    def updateDisplay(self, hours, minutes, seconds, milliseconds):
-        self.total_ms = (hours * 3600 * 1000) + (minutes * 60 * 1000) + (seconds * 1000) + milliseconds
-        self.hours.setText(f"{hours:02d}")
-        self.minutes.setText(f"{minutes:02d}")
-        self.seconds.setText(f"{seconds:02d}")
-        self.milliseconds.setText(f"{milliseconds:03d}")
+    def updateDisplay(self):
+        total_ms = GlobalClock.getTime()
+        print(total_ms)
+        
+        h = total_ms // (1000 * 60 * 60)
+        m = (total_ms // (1000 * 60)) % 60
+        s = (total_ms // 1000) % 60
+        ms = total_ms % 1000
 
-    @pyqtSlot(int)
+        self.hours.setText(f"{h:02d}")
+        self.minutes.setText(f"{m:02d}")
+        self.seconds.setText(f"{s:02d}")
+        self.milliseconds.setText(f"{ms:03d}")
+
     def updateCompletionOverTimeGraph(self, completionCount):
-        self.completionOverTimeGraph.addNewPoint(self.total_ms, completionCount)
+        self.completionOverTimeGraph.addNewPoint(GlobalClock.getTime(), completionCount)

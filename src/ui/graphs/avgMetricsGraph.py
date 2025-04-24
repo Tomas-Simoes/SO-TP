@@ -3,8 +3,9 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore    import pyqtSlot
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure               import Figure
+from clock import GlobalClock
 
-class MetricsGraphWidget(QWidget):
+class AvgMetricsGraph(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         # Holds (time, avg_turnaround, avg_waiting) samples
@@ -28,8 +29,8 @@ class MetricsGraphWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
 
-    @pyqtSlot(float, list)
-    def updateMetrics(self, current_time, completed):
+    @pyqtSlot(object)
+    def updateAvgMetricsGraph(self, completed):
         """
         Slot that receives the current simulation time and a list of completed Process instances.
         Calculates average turnaround and waiting time, then redraws the graph.
@@ -42,7 +43,7 @@ class MetricsGraphWidget(QWidget):
             avg_turnaround = avg_waiting = 0.0
 
         # Append data and redraw
-        self.data.append((current_time, avg_turnaround, avg_waiting))
+        self.data.append((GlobalClock.getTime(), avg_turnaround, avg_waiting))
         self._redraw()
 
     def _redraw(self):

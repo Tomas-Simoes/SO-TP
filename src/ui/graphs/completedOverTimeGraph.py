@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 import matplotlib
 matplotlib.use('Qt5Agg')
+from clock import GlobalClock
 
 class CompletionOverTimeGraph(QWidget):
     def __init__(self, parent=None):
@@ -27,7 +28,7 @@ class CompletionOverTimeGraph(QWidget):
         self.axes.grid(True)
         
         # Initialize empty line
-        self.line, = self.axes.plot([], [], marker='o', linestyle='-', color='blue')
+        self.line, = self.axes.plot([], [], linestyle='-', color='red')
     
     def updateGraph(self):
         if not self.completionTimeData:
@@ -46,5 +47,5 @@ class CompletionOverTimeGraph(QWidget):
         self.canvas.draw()
 
     def addNewPoint(self, currentTime, completedCount):
-        self.completionTimeData.append((currentTime, completedCount))
+        self.completionTimeData.append((GlobalClock.getTime(), completedCount))
         self.updateGraph()

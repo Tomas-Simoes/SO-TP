@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal, QObject, QThread
+from PyQt6.QtCore import pyqtSignal, QObject, QThread, QDateTime
 
 from typing import List
 
@@ -16,30 +16,18 @@ class ClockWorker(QObject):
         self.scheduler = scheduler
 
     def runTickBased(self):
-        base_tick_ms = 1000  # 1 second as base unit
-        simulation_speed = self.config.tick  # How fast simulation should run
+        baseTick_ms = 1000  # 1 second as base unit
+        simulationSpeed = self.config.tick  # How fast simulation should run
         
-        real_time_sleep_ms = int(base_tick_ms / simulation_speed)
-        simulation_tick_ms = int(base_tick_ms)  
+        realTimeSleep_ms = int(baseTick_ms / simulationSpeed)
+        simulationTick_ms = int(baseTick_ms)  
         
         hours = minutes = seconds = milliseconds = total_ms = 0
         
         while (len(self.processList) > 0 or self.scheduler.hasRunningProcesses()):
-            milliseconds += simulation_tick_ms
+            GlobalClock.setSimulationTime(total_ms)
 
-            if milliseconds >= 1000:
-                seconds += milliseconds // 1000
-                milliseconds %= 1000
-            if seconds >= 60:
-                minutes += seconds // 60
-                seconds %= 60
-            if minutes >= 60:
-                hours += minutes // 60
-                minutes %= 60
-                
-            self.updateClockDisplay.emit(int(hours), int(minutes), int(seconds), int(milliseconds))
-            
-            total_ms += simulation_tick_ms
+            total_ms += simulationTick_ms
             newProcess = self.checkNewArrivals(total_ms / 1000)
             if newProcess:
                 self.processList.pop(0)
@@ -47,7 +35,7 @@ class ClockWorker(QObject):
                 
             self.scheduler.runSchedulingCycle()
             
-            QThread.msleep(real_time_sleep_ms)
+            QThread.msleep(realTimeSleep_ms)
 
     def checkNewArrivals(self, currentClock):
         if self.processList:
@@ -60,4 +48,23 @@ class ClockWorker(QObject):
 
         return None
     
-    
+class GlobalClock():
+    currentTime_ms = 0
+    simulationTime_ms = 0
+    lastRealTime = 0
+
+    def updateGlobalTime():
+        nowRealTime = QDateTime.currentMSecsSinceEpoch()
+        timeElapsed = nowRealTime - GlobalClock.lastRealTime
+
+        GlobalClock.currentTime_ms = GlobalClock.simulationTime_ms + timeElapsed
+
+        print("current clock: ", GlobalClock.currentTime_ms)
+        print("timeElapsed: ", timeElapsed)
+
+    def setSimulationTime(time):
+        GlobalClock.lastRealTime = QDateTime.currentMSecsSinceEpoch()
+        GlobalClock.simulationTime_ms = time 
+
+    def getTime():
+        return GlobalClock.currentTime_ms

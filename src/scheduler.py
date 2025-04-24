@@ -13,7 +13,8 @@ class SchedulerWorker(QObject):
     updateRunningProcessDisplay = pyqtSignal(object)
     updateCompletedProcessesDisplay = pyqtSignal(object, int)
     updateCompletedOverTimeGraph = pyqtSignal(int)
-    updateMetricsChart = pyqtSignal(float, list)
+    updateAvgGraph = pyqtSignal(object)
+    
     processStarted = pyqtSignal(Process)
     processCompleted = pyqtSignal(Process)
     processPreempted = pyqtSignal(Process, str)
@@ -99,8 +100,6 @@ class SchedulerWorker(QObject):
 
             self.updateUITime = 0
 
-        # self.updateCompletedProcesses.emit(self.completedProcesses)
-        
         
     def hasRunningProcesses(self):
         return self.currentProcess is not None or len(self.readyProcesses) > 0
@@ -113,39 +112,21 @@ class SchedulerWorker(QObject):
                 self.currentProcess = next_process
                 self.processStarted.emit(next_process)
     
-def getAllProcesses(self):
-    # Combine todas as listas de processos relevantes
-    all_processes = []
-    
-    # Adicionar processos prontos
-    if self.readyProcesses:
-        all_processes.extend(self.readyProcesses)
-    
-    # Adicionar processo em execução se existir
-    if self.currentProcess is not None:
-        all_processes.append(self.currentProcess)
-    
-    # Adicionar processos completados
-    if self.completedProcesses:
-        all_processes.extend(self.completedProcesses)
-    
-    return all_processes
+    def getAllProcesses(self):
+        # Combine todas as listas de processos relevantes
+        all_processes = []
+        
+        # Adicionar processos prontos
+        if self.readyProcesses:
+            all_processes.extend(self.readyProcesses)
+        
+        # Adicionar processo em execução se existir
+        if self.currentProcess is not None:
+            all_processes.append(self.currentProcess)
+        
+        # Adicionar processos completados
+        if self.completedProcesses:
+            all_processes.extend(self.completedProcesses)
+        
+        return all_processes
 
-def runTickBased(self):
-        start_time = time.time()
-        while not self.simulation.isFinished():
-            # ... your scheduling logic ...
-
-            # compute current simulation time
-            current_time = time.time() - start_time
-
-            # compute averages over all completed processes
-            procs = self.simulation.processes
-            if procs:
-                avg_turn  = sum(p.turnaroundTime for p in procs) / len(procs)
-                avg_wait  = sum(p.waitingTime    for p in procs) / len(procs)
-            else:
-                avg_turn = avg_wait = 0.0
-
-            # emit signal
-            self.updateMetricsChart.emit(current_time, avg_turn, avg_wait)

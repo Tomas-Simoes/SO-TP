@@ -28,8 +28,6 @@ class CompletedPanel(QGroupBox):
         self.completedProcessSection()
         self.completedQueueSection()
         self.statisticsSection()
-        
-
         self.mainLayout.addStretch(1)
 
     @pyqtSlot(object, int)

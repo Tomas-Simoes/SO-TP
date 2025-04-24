@@ -2,16 +2,16 @@ from PyQt6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout, QGroupBox, QLabel, 
     QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSlot
+from PyQt6.QtCore import Qt, QThread, pyqtSlot, QTimer
 
 from ui.simulation.elements.process_panel import ProcessesPanel 
 from ui.simulation.elements.completed_panel import CompletedPanel 
 from ui.simulation.elements.config_panel import ConfigPanel
 from ui.simulation.elements.clock_panel import ClockPanel
-from ui.graphs.ganttGraph import GanttChartWidget
-from ui.graphs.metricsGraph import MetricsGraphWidget
+from ui.graphs.avgMetricsGraph import AvgMetricsGraph
 
 from simulation import Simulation
+from clock import GlobalClock
 
 class SimulationWindow(QMainWindow):
     def __init__(self, simulationConfig):
@@ -19,78 +19,84 @@ class SimulationWindow(QMainWindow):
         self.setWindowTitle("Simulation Window")
 
         self.simulationConfig = simulationConfig
-        ## Class to do the actual simulation
         self.simulation = Simulation(simulationConfig)
 
         self.buildSimulationWindow()
         self.initializeThreads()
-        self.subscribeEvents()
+        self.initializeUpdateTimer()
+        self.subscribeUpdateEvents()
 
         self.clockThread.start()
 
-    # Initializes our needed threads in order to not block main thread
-    #
+    # Initialize our clock threads in order to not block main thread
+    # which runs at simulation speed
     #   - runTickBased() (from ClockWorker) runs on clockThread
     def initializeThreads(self):
         self.clockThread = QThread(self)
         self.simulation.clockWorker.moveToThread(self.clockThread)
-        
         self.clockThread.started.connect(self.simulation.clockWorker.runTickBased)        
     
+    # Initializes a clock which updates the time-related UI
+    #   - updateGlobalTim and updateTimeRelatedUI run on mainThread
+    #   - runs at 60fps
+    def initializeUpdateTimer(self):
+        self.updateUITimer = QTimer(self)
+        self.updateUITimer.timeout.connect(GlobalClock.updateGlobalTime)
+        self.updateUITimer.timeout.connect(self.updateTimeRelatedUI)
+        self.updateUITimer.start(16)
+
     # Subscribe event's in other to update our GUI when some event occurs
-    def subscribeEvents(self):
-        self.simulation.clockWorker.updateClockDisplay.connect(self.clockPanel.updateDisplay)
+    def subscribeUpdateEvents(self):
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
         self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
         self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.completedPanel.updateCompletedProcesses)
-        self.simulation.schedulerWorker.updateCompletedOverTimeGraph.connect(self.clockPanel.updateCompletionOverTimeGraph)
-    #     self.simulation.schedulerWorker.updateProcessesDisplay.connect(
-    #     lambda processes: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
-    # )
-    #     self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(
-    #     lambda _: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
-    # )
-    #     self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(
-    #     lambda processes, count: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
-    # )
-        self.simulation.clockWorker.updateClockDisplay.connect(self.onClockTick)
-        self.simulation.schedulerWorker.updateMetricsChart.connect(self.metricsChart.updateMetrics)
+
+    # At 60fps updates our time-related GUI 
+    def updateTimeRelatedUI(self):
+        self.clockPanel.updateCompletionOverTimeGraph(len(self.simulation.schedulerWorker.completedProcesses))
+        self.avgMetricsGraph.updateAvgMetricsGraph(self.simulation.schedulerWorker.completedProcesses)
+        self.clockPanel.updateDisplay()
 
     """
         Builds the simulation window in the following format:
-        -------------------------------------
-        |   Processes Panel     |  Panel 2  |
-        | Config | Clock Panel  |  Panel 4  |
-        -------------------------------------
+        -----------------------------------------------------
+        |   Processes Panel     |  Completed Process Panel  |
+        | Config | Clock Panel  |         Graphs            |
+        -----------------------------------------------------
     """
     def buildSimulationWindow(self):
         content = QWidget()
-        contentLayout = QGridLayout(content)
-
+        contentLayout = QHBoxLayout(content)
+        contentLayout.setSpacing(0)
+        contentLayout.setContentsMargins(0, 0, 0, 0)
+        
         # Creates the four panels, ready to implement on the Simulation Window
         # where bottomLeftPanel is a combination of Config and Clock panels
         self.processesPanel = self.createTopLeftPanel()
         self.completedPanel = self.createTopRightPanel()
-        bottomLeftPanel = self.createBottomLeftPanel()
-        bottomRightPanel = self.createBottomRightPanel()
+        self.bottomLeftPanel = self.createBottomLeftPanel()
+        self.bottomRightPanel = self.createBottomRightPanel()
+        
+        # Left column
+        leftColumn = QVBoxLayout()
+        leftColumn.setSpacing(0)
+        leftColumn.addWidget(self.processesPanel)
+        leftColumn.addWidget(self.bottomLeftPanel)
+        
+        # Right column
+        rightColumn = QVBoxLayout()
+        rightColumn.setSpacing(0)
+        rightColumn.addWidget(self.completedPanel)
+        rightColumn.addWidget(self.bottomRightPanel)
 
-
-        # Add the panels to the grid layout
-        contentLayout.addWidget(self.processesPanel, 0, 0)
-        contentLayout.addWidget(self.completedPanel, 0, 1)
-        contentLayout.addWidget(bottomLeftPanel, 1, 0)
-        contentLayout.addWidget(bottomRightPanel, 1, 1)
-
-        contentLayout.setColumnStretch(0, 1)
-        contentLayout.setColumnStretch(1, 1)
-        contentLayout.setRowStretch(0, 1)
-        contentLayout.setRowStretch(1, 1)
+        contentLayout.addLayout(leftColumn)
+        contentLayout.addLayout(rightColumn)
 
         # Enable scrolling for lower resolutions
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(content)
-
+        
         content.setMinimumSize(0, 0)
         content.setSizePolicy(
             QWidget().sizePolicy().Policy.Ignored,
@@ -103,7 +109,6 @@ class SimulationWindow(QMainWindow):
     def createTopLeftPanel(self):
         return ProcessesPanel(self.simulationConfig)
 
-    # TODO
     def createTopRightPanel(self):
         return CompletedPanel(self.simulationConfig)
 
@@ -127,45 +132,12 @@ class SimulationWindow(QMainWindow):
 
         layout = QVBoxLayout()
 
-        # self.ganttChart = GanttChartWidget([])
-        # layout.addWidget(self.ganttChart)
-        self.metricsChart = MetricsGraphWidget(parent=self)
-        layout.addWidget(self.metricsChart)
+        self.avgMetricsGraph = AvgMetricsGraph(parent=self)
+        self.avg2 = AvgMetricsGraph(parent=self)
+        layout.addWidget(self.avgMetricsGraph)
+        layout.addWidget(self.avg2)
 
         layout.addStretch(1)
         
         bottom_right_panel.setLayout(layout)
         return bottom_right_panel
-    
-    @pyqtSlot(int, int, int, int)
-    def onClockTick(self, hours, minutes, seconds, milliseconds):
-        # Convert to float seconds
-        current_time = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
-        # Limitar atualizações do gráfico para não sobrecarregar a interface
-        if not hasattr(self, '_last_metrics_update') or current_time - self._last_metrics_update >= 0.1:
-            self._last_metrics_update = current_time
-            
-            # Compute average metrics at current time
-            procs = self.simulation.schedulerWorker.completedProcesses  
-            completed = [p for p in procs if p.completionTime is not None and p.completionTime <= current_time]
-            
-            # Update graph
-            self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, completed)    
-# def updateGanttChart(self):
-#     # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
-#     all_processes = []
-    
-#     # Adicionar processos prontos
-#     if hasattr(self.simulation.schedulerWorker, 'readyProcesses'):
-#         all_processes.extend(self.simulation.schedulerWorker.readyProcesses)
-    
-#     # Adicionar processo em execução se existir
-#     if hasattr(self.simulation.schedulerWorker, 'currentProcess') and self.simulation.schedulerWorker.currentProcess is not None:
-#         all_processes.append(self.simulation.schedulerWorker.currentProcess)
-    
-#     # Adicionar processos completados
-#     if hasattr(self.simulation.schedulerWorker, 'completedProcesses'):
-#         all_processes.extend(self.simulation.schedulerWorker.completedProcesses)
-    
-#     # Atualizar o gráfico Gantt
-#     self.ganttChart.updateGantt(all_processes)
