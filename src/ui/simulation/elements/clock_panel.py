@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt, pyqtSlot
 from ui.custom.process_block import ProcessBlock
 from ui.graphs.completedOverTimeGraph import CompletionOverTimeGraph
 
-from clock import GlobalClock
+from global_clock import GlobalClock
 class ClockPanel(QGroupBox):
     def __init__(self, parent=None):
         super().__init__("Time Panel", parent)
@@ -60,9 +60,8 @@ class ClockPanel(QGroupBox):
         self.seconds = seconds 
         self.milliseconds = milliseconds
     
-    def updateDisplay(self):
+    def updateClockDisplay(self):
         total_ms = GlobalClock.getTime()
-        print(total_ms)
         
         h = total_ms // (1000 * 60 * 60)
         m = (total_ms // (1000 * 60)) % 60

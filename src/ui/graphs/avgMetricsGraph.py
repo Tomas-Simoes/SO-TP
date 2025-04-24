@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore    import pyqtSlot
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure               import Figure
-from clock import GlobalClock
+from global_clock import GlobalClock
 
 class AvgMetricsGraph(QWidget):
     def __init__(self, parent=None):
@@ -17,42 +17,44 @@ class AvgMetricsGraph(QWidget):
                                   QSizePolicy.Policy.Expanding)
         # One subplot
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_title("Average Turnaround & Waiting Time")
-        self.ax.set_xlabel("Time (s)")
-        self.ax.set_ylabel("Time Units")
+        self.ax.set_title("Average Metrics")
+        self.ax.set_xlabel("Time (ms)")
+        self.ax.set_ylabel("Units")
         self.ax.grid(True)
         # Two line objects, initialized empty
         self.line_turn, = self.ax.plot([], [], label="Avg Turnaround")
         self.line_wait, = self.ax.plot([], [], label="Avg Waiting")
+        self.line_response, = self.ax.plot([], [], label="Avg Response Time")
+
         self.ax.legend()
         # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
 
-    @pyqtSlot(object)
-    def updateAvgMetricsGraph(self, completed):
-        """
-        Slot that receives the current simulation time and a list of completed Process instances.
-        Calculates average turnaround and waiting time, then redraws the graph.
-        """
-        # Calculate averages inside the widget
+    # Receives current a list of completed processes and calculates averages .
+    @pyqtSlot(object, int)
+    def updateAvgMetricsGraph(self, completed, _):
         if completed:
             avg_turnaround = sum(p.turnaroundTime for p in completed) / len(completed)
             avg_waiting    = sum(p.waitingTime    for p in completed) / len(completed)
+            avg_responseTime  = sum(((p.firstScheduling / 1000) - p.arrivalTime) for p in completed) / len(completed)
         else:
-            avg_turnaround = avg_waiting = 0.0
+            avg_turnaround = avg_waiting = avg_responseTime = 0.0
 
-        # Append data and redraw
-        self.data.append((GlobalClock.getTime(), avg_turnaround, avg_waiting))
-        self._redraw()
+        print(avg_turnaround)
+        print(avg_waiting)
+        print(avg_responseTime)
 
-    def _redraw(self):
-        # unzip data
-        times, turns, waits = zip(*self.data)
-        # update lines
+        self.data.append((GlobalClock.getTime(), avg_turnaround, avg_waiting, avg_responseTime))
+        self.redraw()
+
+    def redraw(self):
+        times, turns, waits, response = zip(*self.data)
+
         self.line_turn.set_data(times, turns)
         self.line_wait.set_data(times, waits)
-        # rescale axes
+        self.line_response.set_data(times, response)
+
         self.ax.relim()
         self.ax.autoscale_view()
         self.canvas.draw()

@@ -6,6 +6,7 @@ from config.types.clock import ClockConfig
 from scheduler import SchedulerWorker
 from processes.process import Process
 
+from global_clock import GlobalClock
 class ClockWorker(QObject):
     updateClockDisplay = pyqtSignal(int, int, int, int)
 
@@ -22,7 +23,7 @@ class ClockWorker(QObject):
         realTimeSleep_ms = int(baseTick_ms / simulationSpeed)
         simulationTick_ms = int(baseTick_ms)  
         
-        hours = minutes = seconds = milliseconds = total_ms = 0
+        total_ms = 0
         
         while (len(self.processList) > 0 or self.scheduler.hasRunningProcesses()):
             GlobalClock.setSimulationTime(total_ms)
@@ -48,23 +49,3 @@ class ClockWorker(QObject):
 
         return None
     
-class GlobalClock():
-    currentTime_ms = 0
-    simulationTime_ms = 0
-    lastRealTime = 0
-
-    def updateGlobalTime():
-        nowRealTime = QDateTime.currentMSecsSinceEpoch()
-        timeElapsed = nowRealTime - GlobalClock.lastRealTime
-
-        GlobalClock.currentTime_ms = GlobalClock.simulationTime_ms + timeElapsed
-
-        print("current clock: ", GlobalClock.currentTime_ms)
-        print("timeElapsed: ", timeElapsed)
-
-    def setSimulationTime(time):
-        GlobalClock.lastRealTime = QDateTime.currentMSecsSinceEpoch()
-        GlobalClock.simulationTime_ms = time 
-
-    def getTime():
-        return GlobalClock.currentTime_ms

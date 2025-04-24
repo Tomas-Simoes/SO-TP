@@ -2,6 +2,7 @@ class Process:
     def __init__(self, pid, arrivalTime, burstTime, priority, period):
         self.pid = pid
         self.arrivalTime = arrivalTime
+        self.firstScheduling = None
         self.burstTime = burstTime
         self.priority = priority
         self.period = period

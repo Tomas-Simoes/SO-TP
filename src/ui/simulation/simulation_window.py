@@ -11,7 +11,7 @@ from ui.simulation.elements.clock_panel import ClockPanel
 from ui.graphs.avgMetricsGraph import AvgMetricsGraph
 
 from simulation import Simulation
-from clock import GlobalClock
+from global_clock import GlobalClock
 
 class SimulationWindow(QMainWindow):
     def __init__(self, simulationConfig):
@@ -50,12 +50,14 @@ class SimulationWindow(QMainWindow):
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
         self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
         self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.completedPanel.updateCompletedProcesses)
+        self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.avgMetricsGraph.updateAvgMetricsGraph)
 
     # At 60fps updates our time-related GUI 
     def updateTimeRelatedUI(self):
-        self.clockPanel.updateCompletionOverTimeGraph(len(self.simulation.schedulerWorker.completedProcesses))
-        self.avgMetricsGraph.updateAvgMetricsGraph(self.simulation.schedulerWorker.completedProcesses)
-        self.clockPanel.updateDisplay()
+        completedProcess = self.simulation.schedulerWorker.completedProcesses
+        self.clockPanel.updateCompletionOverTimeGraph(len(completedProcess))
+        self.clockPanel.updateClockDisplay()
+
 
     """
         Builds the simulation window in the following format:

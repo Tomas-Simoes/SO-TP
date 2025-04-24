@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 import matplotlib
 matplotlib.use('Qt5Agg')
-from clock import GlobalClock
+from global_clock import GlobalClock
 
 class CompletionOverTimeGraph(QWidget):
     def __init__(self, parent=None):

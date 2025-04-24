@@ -6,6 +6,7 @@ from config.types.scheduling import SchedulingConfig
 from config.types.clock import ClockConfig
 from processes.process import Process
 
+from global_clock import GlobalClock
 from typing import List
 
 class SchedulerWorker(QObject):
@@ -108,6 +109,9 @@ class SchedulerWorker(QObject):
         if not self.currentProcess:
             next_process = self.algorithm.schedule()
             if next_process:
+                if not next_process.firstScheduling:
+                    next_process.firstScheduling = GlobalClock.getTime()
+
                 self.processSwitchCount += 1
                 self.currentProcess = next_process
                 self.processStarted.emit(next_process)
