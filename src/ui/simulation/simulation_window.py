@@ -148,26 +148,9 @@ class SimulationWindow(QMainWindow):
             # Compute average metrics at current time
             procs = self.simulation.schedulerWorker.completedProcesses  
             completed = [p for p in procs if p.completionTime is not None and p.completionTime <= current_time]
-            if completed:
-                avg_turn = sum(p.turnaroundTime for p in completed) / len(completed)
-                avg_wait = sum(p.waitingTime for p in completed) / len(completed)
-            else:
-                avg_turn = avg_wait = 0.0
             
             # Update graph
-            self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
-    # Compute average metrics at current time
-        procs = self.simulation.schedulerWorker.completedProcesses  
-        completed = [p for p in procs if p.completionTime is not None and p.completionTime <= current_time]
-        if completed:
-            avg_turn = sum(p.turnaroundTime for p in completed) / len(completed)
-            avg_wait = sum(p.waitingTime for p in completed) / len(completed)
-        else:
-            avg_turn = avg_wait = 0.0
-    
-        # Update graph
-        self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
-
+            self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, completed)    
 # def updateGanttChart(self):
 #     # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
 #     all_processes = []

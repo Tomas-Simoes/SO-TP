@@ -13,7 +13,7 @@ class SchedulerWorker(QObject):
     updateRunningProcessDisplay = pyqtSignal(object)
     updateCompletedProcessesDisplay = pyqtSignal(object, int)
     updateCompletedOverTimeGraph = pyqtSignal(int)
-    updateMetricsChart = pyqtSignal(float, float, float)
+    updateMetricsChart = pyqtSignal(float, list)
     processStarted = pyqtSignal(Process)
     processCompleted = pyqtSignal(Process)
     processPreempted = pyqtSignal(Process, str)
