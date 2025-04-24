@@ -51,8 +51,6 @@ class SchedulerWorker(QObject):
             self.currentProcess.time_in_current_quantum += self.clockConfig.tick
             self.currentProcess.completionTime += self.clockConfig.tick
 
-
-            
             # Check if process is completed
             if self.currentProcess.remaining_time <= 0:
                 completed_process = self.currentProcess

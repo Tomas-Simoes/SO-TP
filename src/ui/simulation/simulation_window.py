@@ -139,8 +139,27 @@ class SimulationWindow(QMainWindow):
     
     @pyqtSlot(int, int, int, int)
     def onClockTick(self, hours, minutes, seconds, milliseconds):
-    # Convert to float seconds
+        # Convert to float seconds
         current_time = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
+<<<<<<< HEAD
+        
+        # Limitar atualizações do gráfico para não sobrecarregar a interface
+        # Atualiza apenas a cada 0.1 segundos (ou outro valor que preferires)
+        if not hasattr(self, '_last_metrics_update') or current_time - self._last_metrics_update >= 0.1:
+            self._last_metrics_update = current_time
+            
+            # Compute average metrics at current time
+            procs = self.simulation.schedulerWorker.completedProcesses  
+            completed = [p for p in procs if p.completionTime is not None and p.completionTime <= current_time]
+            if completed:
+                avg_turn = sum(p.turnaroundTime for p in completed) / len(completed)
+                avg_wait = sum(p.waitingTime for p in completed) / len(completed)
+            else:
+                avg_turn = avg_wait = 0.0
+            
+            # Update graph
+            self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
+=======
     
     # Compute average metrics at current time
         procs = self.simulation.schedulerWorker.completedProcesses  
@@ -153,6 +172,8 @@ class SimulationWindow(QMainWindow):
     
         # Update graph
         self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
+        
+>>>>>>> c905b507555d33064eb1f13372cad4a0ebef10d2
 # def updateGanttChart(self):
 #     # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
 #     all_processes = []
