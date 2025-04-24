@@ -19,17 +19,14 @@ class ClockWorker(QObject):
         base_tick_ms = 1000  # 1 second as base unit
         simulation_speed = self.config.tick  # How fast simulation should run
         
-        # The actual sleep time is inversely proportional to simulation speed
         real_time_sleep_ms = int(base_tick_ms / simulation_speed)
-        
-        # The simulation time increment remains constant in simulation time
-        simulation_tick_ms = int(base_tick_ms)  # Always 1 second in simulation time
+        simulation_tick_ms = int(base_tick_ms)  
         
         hours = minutes = seconds = milliseconds = total_ms = 0
         
         while (len(self.processList) > 0 or self.scheduler.hasRunningProcesses()):
-            # Increment by fixed simulation time
             milliseconds += simulation_tick_ms
+
             if milliseconds >= 1000:
                 seconds += milliseconds // 1000
                 milliseconds %= 1000
@@ -50,7 +47,6 @@ class ClockWorker(QObject):
                 
             self.scheduler.runSchedulingCycle()
             
-            # Sleep for real-time duration (shorter sleep = faster simulation)
             QThread.msleep(real_time_sleep_ms)
 
     def checkNewArrivals(self, currentClock):
