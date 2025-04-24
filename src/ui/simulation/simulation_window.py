@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout, QGroupBox, QLabel, 
     QVBoxLayout, QHBoxLayout, QSizePolicy, QScrollArea
 )
-from PyQt6.QtCore import Qt, QThread
+from PyQt6.QtCore import Qt, QThread, pyqtSlot
 
 from ui.simulation.elements.process_panel import ProcessesPanel 
 from ui.simulation.elements.completed_panel import CompletedPanel 
@@ -53,6 +53,7 @@ class SimulationWindow(QMainWindow):
     #     self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(
     #     lambda processes, count: self.ganttChart.updateGantt(self.simulation.schedulerWorker.readyProcesses)
     # )
+        self.simulation.clockWorker.updateClockDisplay.connect(self.onClockTick)
         self.simulation.schedulerWorker.updateMetricsChart.connect(self.metricsChart.updateMetrics)
 
     """
@@ -136,6 +137,22 @@ class SimulationWindow(QMainWindow):
         bottom_right_panel.setLayout(layout)
         return bottom_right_panel
     
+    @pyqtSlot(int, int, int, int)
+    def onClockTick(self, hours, minutes, seconds, milliseconds):
+    # Convert to float seconds
+        current_time = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
+    
+    # Compute average metrics at current time
+        procs = self.simulation.schedulerWorker.completedProcesses  
+        completed = [p for p in procs if p.completionTime is not None and p.completionTime <= current_time]
+        if completed:
+            avg_turn = sum(p.turnaroundTime for p in completed) / len(completed)
+            avg_wait = sum(p.waitingTime for p in completed) / len(completed)
+        else:
+            avg_turn = avg_wait = 0.0
+    
+        # Update graph
+        self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
 # def updateGanttChart(self):
 #     # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
 #     all_processes = []
