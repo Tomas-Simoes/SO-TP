@@ -49,11 +49,11 @@ class SchedulerWorker(QObject):
             # Execute one time unit
             self.currentProcess.remaining_time -= self.clockConfig.tick
             self.currentProcess.time_in_current_quantum += self.clockConfig.tick
-            self.currentProcess.completionTime += self.clockConfig.tick
 
             # Check if process is completed
             if self.currentProcess.remaining_time <= 0:
                 completed_process = self.currentProcess
+                completed_process.completionTime = self.current_time 
                 completed_process.turnaroundTime = completed_process.completionTime - completed_process.arrivalTime
                 completed_process.waitingTime = completed_process.turnaroundTime - completed_process.burstTime
                 self.currentProcess = None

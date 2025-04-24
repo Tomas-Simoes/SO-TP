@@ -28,5 +28,5 @@ class Process:
         return self.remaining_time <= 0
         
     def __str__(self):
-        return f"Process {self.pid}: start={self.arrivalTime}, burst={self.burstTime}, priority={self.priority}, period={self.period}"
+        return f"Process {self.pid}: start={self.arrivalTime}, burst={self.burstTime}, priority={self.priority}, period={self.period}, completionTime={self.completionTime}, waitingTime={self.waitingTime}"
     
