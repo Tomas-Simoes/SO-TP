@@ -11,7 +11,7 @@ class Process:
         self.waitingTime = 0
         self.turnaroundTime = 0
         self.startTime = None
-        self.completionTime = None
+        self.completionTime = 0
         self.status = "READY"
         
     def execute(self, time_quantum):
