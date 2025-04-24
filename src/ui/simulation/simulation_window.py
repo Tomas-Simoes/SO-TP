@@ -153,6 +153,7 @@ class SimulationWindow(QMainWindow):
     
         # Update graph
         self.simulation.schedulerWorker.updateMetricsChart.emit(current_time, avg_turn, avg_wait)    
+        
 # def updateGanttChart(self):
 #     # Obter todos os processos diretamente acessando as propriedades do schedulerWorker
 #     all_processes = []
