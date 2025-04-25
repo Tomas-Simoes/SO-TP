@@ -17,6 +17,7 @@ class ShortestJob(Algorithm):
     def process_arrival(self, process: Process) -> None:
         self.ready_queue.append(process)
     
-    def process_completion(self, process: Process) -> None:
+    def process_completion(self, process: Process) -> int:
         if process in self.ready_queue:
             self.ready_queue.remove(process)
+        return 1

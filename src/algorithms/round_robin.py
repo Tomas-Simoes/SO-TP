@@ -21,10 +21,11 @@ class RoundRobin(Algorithm):
         print("Process arrived ", process)
         self.ready_queue.append(process)
     
-    def process_completion(self, process: Process) -> None:
+    def process_completion(self, process: Process) -> int:
         print("Process completed ", process)
         if process in self.ready_queue:
             self.ready_queue.remove(process)
+        return 1
             
     def process_preemption(self, process: Process, reason: str) -> None:
         print(f"Process preempted  {process} due to {reason}")

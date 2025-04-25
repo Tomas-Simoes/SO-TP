@@ -41,9 +41,6 @@ class AvgMetricsGraph(QWidget):
         else:
             avg_turnaround = avg_waiting = avg_responseTime = 0.0
 
-        print(avg_turnaround)
-        print(avg_waiting)
-        print(avg_responseTime)
 
         self.data.append((GlobalClock.getTime(), avg_turnaround, avg_waiting, avg_responseTime))
         self.redraw()

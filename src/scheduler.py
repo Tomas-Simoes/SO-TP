@@ -51,6 +51,11 @@ class SchedulerWorker(QObject):
             # Execute one time unit
             self.currentProcess.remaining_time -= self.clockConfig.tick
             self.currentProcess.time_in_current_quantum += self.clockConfig.tick
+            
+            # Algoritms conditions 
+            roundRobin = self.currentProcess.time_in_current_quantum >= self.schedulingConfig.timeQuantum and self.schedulingConfig.scheduleAlgorithm.upper() == "ROUND ROBIN"
+            prioprityPreemptive = (self.currentProcess.priority > min(self.algorithm.ready_queue, key=lambda process: process.priority).priority) and (self.currentProcess.remaining_time > 0) and (len(self.algorithm.ready_queue) > 0) and (self.schedulingConfig.scheduleAlgorithm.upper() == "PRIORITY SCHEDULING (PREEMPTIVE)")
+            rateMonotonic = (self.currentProcess.period > min(self.algorithm.ready_queue, key=lambda process: process.period).period) and (self.currentProcess.remaining_time > 0) and (len(self.algorithm.ready_queue) > 0) and (self.schedulingConfig.scheduleAlgorithm.upper() == "RATE MONOTONIC")
 
             # Check if process is completed
             if self.currentProcess.remaining_time <= 0:
@@ -58,21 +63,25 @@ class SchedulerWorker(QObject):
                 completed_process.completionTime = self.current_time 
                 completed_process.turnaroundTime = completed_process.completionTime - completed_process.arrivalTime
                 completed_process.waitingTime = completed_process.turnaroundTime - completed_process.burstTime
+                
                 self.currentProcess = None
-                self.algorithm.process_completion(completed_process)
-                self.processCompleted.emit(completed_process)
-                self.completedProcesses.append(completed_process)
+                
+                completed = self.algorithm.process_completion(completed_process)
+                
+                if completed == 1:
+                    self.processCompleted.emit(completed_process)
+                    self.completedProcesses.append(completed_process)
 
-                # when a new process is completed, send signal to update CompletedProcess over Time graph
-                self.updateCompletedOverTimeGraph.emit(len(self.completedProcesses))
-                if completed_process in self.readyProcesses:
-                    self.readyProcesses.remove(completed_process)
+                    # when a new process is completed, send signal to update CompletedProcess over Time graph
+                    self.updateCompletedOverTimeGraph.emit(len(self.completedProcesses))
+                    if completed_process in self.readyProcesses:
+                        self.readyProcesses.remove(completed_process)                    
                 
                 self._checkScheduling()
                 
             # Check if the process current time quantuam is greater or equal to the desired time quantum 
             # if it is we need to stop running that process and run the next one in the queue
-            elif self.currentProcess.time_in_current_quantum >= self.schedulingConfig.timeQuantum and self.schedulingConfig.scheduleAlgorithm.upper() == "ROUND ROBIN":
+            elif roundRobin:
                 preempted_process = self.currentProcess
                 preempted_process.time_in_current_quantum = 0 
                 self.currentProcess = None
@@ -83,12 +92,20 @@ class SchedulerWorker(QObject):
                 
             # Check if there is any process with higher priority than the currenty being processed 
             # if there is then we stop running that process and run the next the one in queue
-            elif (self.currentProcess.priority > min(self.algorithm.ready_queue, key=lambda process: process.priority).priority) and (self.currentProcess.remaining_time > 0) and (len(self.algorithm.ready_queue) > 0) and (self.schedulingConfig.scheduleAlgorithm.upper() == "PRIORITY SCHEDULING (PREEMPTIVE)"):
+            elif prioprityPreemptive:
                 preempted_process = self.currentProcess
                 self.currentProcess = None 
                 self.algorithm.ready_queue.append(preempted_process)
                 self.processPreempted.emit(preempted_process, "priority")
                 self.algorithm.process_preemption(preempted_process, "priority")
+                self._checkScheduling()
+                
+            elif rateMonotonic:
+                preempted_process = self.currentProcess
+                self.currentProcess = None 
+                self.algorithm.ready_queue.append(preempted_process)
+                self.processPreempted.emit(preempted_process, "period priority")
+                self.algorithm.process_preemption(preempted_process, "period priority")
                 self._checkScheduling()
                 
         else:
