@@ -23,14 +23,10 @@ class EarliestDeadline(Algorithm):
             self.deadline_miss(process)
             return -1
         else:
-            print(f"Process completed: {process}")
             self.ready_queue.remove(process)
 
             return 1
     
-    def process_preemption(self, process: Process, reason: str) -> None:
-        print(f"Process preempted ({reason}): {process}")
     
     def deadline_miss(self, process: Process) -> None:
-        print(f"DEADLINE MISS: {process}")
         self.ready_queue.remove(process)
