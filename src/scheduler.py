@@ -64,7 +64,7 @@ class SchedulerWorker(QObject):
             # Check if process is completed
             if self.currentProcess.remaining_time <= 0:
                 completed_process = self.currentProcess
-                completed_process.completionTime = self.current_time 
+                completed_process.completionTime = (GlobalClock.getTime() / 1000) - completed_process.arrivalTime
                 completed_process.turnaroundTime = completed_process.completionTime - completed_process.arrivalTime
                 completed_process.waitingTime = completed_process.turnaroundTime - completed_process.burstTime
                 
