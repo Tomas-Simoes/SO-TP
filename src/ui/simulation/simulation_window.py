@@ -9,6 +9,7 @@ from ui.simulation.elements.completed_panel import CompletedPanel
 from ui.simulation.elements.config_panel import ConfigPanel
 from ui.simulation.elements.clock_panel import ClockPanel
 from ui.graphs.avgMetricsGraph import AvgMetricsGraph
+from ui.graphs.boxMetricsGraph import BoxMetricsGraph
 
 from simulation import Simulation
 from global_clock import GlobalClock
@@ -42,7 +43,7 @@ class SimulationWindow(QMainWindow):
     def initializeUpdateTimer(self):
         self.updateUITimer = QTimer(self)
         self.updateUITimer.timeout.connect(GlobalClock.updateGlobalTime)
-        self.updateUITimer.timeout.connect(self.updateTimeRelatedUI)
+        self.updateUITimer.timeout.connect(self.updateRealTimeUI)
         self.updateUITimer.start(16)
 
     # Subscribe event's in other to update our GUI when some event occurs
@@ -50,20 +51,32 @@ class SimulationWindow(QMainWindow):
         self.simulation.schedulerWorker.updateProcessesDisplay.connect(self.processesPanel.updateReadyProcesses)
         self.simulation.schedulerWorker.updateRunningProcessDisplay.connect(self.processesPanel.updateRunningProcess)
         self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.completedPanel.updateCompletedProcesses)
-        self.simulation.schedulerWorker.updateCompletedProcessesDisplay.connect(self.avgMetricsGraph.updateAvgMetricsGraph)
+      
+        self.simulation.clockWorker.updateSimulationTimeUI.connect(self.updateSimulationTimeUI)
+
+    def updateSimulationTimeUI(self):
+        schedulerWorker = self.simulation.schedulerWorker
+
+        self.clockPanel.completionOverTimeGraph.addNewDerivatePoint()
+        self.clockPanel.waitingOverTimeGraph.addNewDerivatePoint()
+        
+        self.boxMetricsGraph.updateGraph(schedulerWorker.completedProcesses)
+        self.avgMetricsGraph.updateGraph(schedulerWorker.completedProcesses)
 
     # At 60fps updates our time-related GUI 
-    def updateTimeRelatedUI(self):
-        completedProcess = self.simulation.schedulerWorker.completedProcesses
-        self.clockPanel.updateCompletionOverTimeGraph(len(completedProcess))
+    def updateRealTimeUI(self):
+        schedulerWorker = self.simulation.schedulerWorker
         self.clockPanel.updateClockDisplay()
+
+        self.clockPanel.completionOverTimeGraph.addNewPoint(len(schedulerWorker.completedProcesses))
+        self.clockPanel.waitingOverTimeGraph.addNewPoint(len(schedulerWorker.readyProcesses))
 
 
     """
         Builds the simulation window in the following format:
         -----------------------------------------------------
         |   Processes Panel     |  Completed Process Panel  |
-        | Config | Clock Panel  |         Graphs            |
+        |     Clock Panel       |         Graphs            |
         -----------------------------------------------------
     """
     def buildSimulationWindow(self):
@@ -119,15 +132,12 @@ class SimulationWindow(QMainWindow):
         bottomLeftPanel = QWidget()
         bottomLeftLayout = QHBoxLayout(bottomLeftPanel)
 
-        self.configPanel = ConfigPanel(self.simulationConfig)
         self.clockPanel = ClockPanel()
 
-        bottomLeftLayout.addWidget(self.configPanel, stretch=1)
         bottomLeftLayout.addWidget(self.clockPanel, stretch=1)
 
         return bottomLeftPanel
     
-    # TODO
     def createBottomRightPanel(self):
         bottom_right_panel = QGroupBox("Metrics Over Time")
         bottom_right_panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -135,9 +145,9 @@ class SimulationWindow(QMainWindow):
         layout = QVBoxLayout()
 
         self.avgMetricsGraph = AvgMetricsGraph(parent=self)
-        self.avg2 = AvgMetricsGraph(parent=self)
+        self.boxMetricsGraph = BoxMetricsGraph(parent=self)
         layout.addWidget(self.avgMetricsGraph)
-        layout.addWidget(self.avg2)
+        layout.addWidget(self.boxMetricsGraph)
 
         layout.addStretch(1)
         

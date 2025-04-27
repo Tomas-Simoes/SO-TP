@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt, pyqtSlot
 
 from ui.custom.process_block import ProcessBlock
 from ui.graphs.completedOverTimeGraph import CompletionOverTimeGraph
+from ui.graphs.waitingOverTimeGraph import WaitingOverTimeGraph
 
 from global_clock import GlobalClock
 class ClockPanel(QGroupBox):
@@ -14,7 +15,7 @@ class ClockPanel(QGroupBox):
         super().__init__("Time Panel", parent)
         self.main_layout = QVBoxLayout()
         self.main_layout.setContentsMargins(0, 0, 0, 0)  
-        self.main_layout.setSpacing(0)  
+        self.main_layout.setSpacing(10)  # Adjust the spacing as needed
         self.setLayout(self.main_layout)
         
         clock_widget = QWidget()
@@ -49,11 +50,22 @@ class ClockPanel(QGroupBox):
         clock_layout.addWidget(seconds)
         clock_layout.addWidget(milliseconds)
 
-        self.completionOverTimeGraph = CompletionOverTimeGraph()
+        # Create a horizontal layout to hold the two graphs side by side
+        graph_layout = QHBoxLayout()
 
+        # Initialize the graphs
+        self.completionOverTimeGraph = CompletionOverTimeGraph()
+        self.waitingOverTimeGraph = WaitingOverTimeGraph()
+
+        # Add the graphs to the horizontal layout
+        graph_layout.addWidget(self.completionOverTimeGraph)
+        graph_layout.addWidget(self.waitingOverTimeGraph)
+
+        # Add the clock widget and the graph layout to the main layout
         self.main_layout.addWidget(clock_widget, 0, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
-        self.main_layout.addWidget(self.completionOverTimeGraph)
-        self.main_layout.addStretch(1) 
+        self.main_layout.addLayout(graph_layout)  # Use addLayout to add the horizontal graph layout
+
+        self.main_layout.addStretch(1)  # Add stretch at the bottom to fill space
 
         self.hours = hours 
         self.minutes = minutes 
@@ -75,3 +87,4 @@ class ClockPanel(QGroupBox):
 
     def updateCompletionOverTimeGraph(self, completionCount):
         self.completionOverTimeGraph.addNewPoint(GlobalClock.getTime(), completionCount)
+

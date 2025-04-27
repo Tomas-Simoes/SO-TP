@@ -9,6 +9,7 @@ from processes.process import Process
 from global_clock import GlobalClock
 class ClockWorker(QObject):
     updateClockDisplay = pyqtSignal(int, int, int, int)
+    updateSimulationTimeUI = pyqtSignal()
 
     def __init__(self, config: ClockConfig, scheduler: SchedulerWorker, processList: List[Process]):
         super().__init__()
@@ -27,6 +28,7 @@ class ClockWorker(QObject):
         
         while (len(self.processList) > 0 or self.scheduler.hasRunningProcesses()):
             GlobalClock.setSimulationTime(total_ms)
+            self.updateSimulationTimeUI.emit()
 
             total_ms += simulationTick_ms
             newProcess = self.checkNewArrivals(total_ms / 1000)

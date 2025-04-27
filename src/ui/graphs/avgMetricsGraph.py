@@ -10,18 +10,18 @@ class AvgMetricsGraph(QWidget):
         super().__init__(parent)
         # Holds (time, avg_turnaround, avg_waiting) samples
         self.data = []
-        # Matplotlib figure & canvas
+
         self.fig = Figure(dpi=100)
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setSizePolicy(QSizePolicy.Policy.Expanding,
                                   QSizePolicy.Policy.Expanding)
-        # One subplot
+
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_title("Average Metrics")
+        self.ax.set_title("Completition Metrics Average")
         self.ax.set_xlabel("Time (ms)")
         self.ax.set_ylabel("Units")
         self.ax.grid(True)
-        # Two line objects, initialized empty
+
         self.line_turn, = self.ax.plot([], [], label="Avg Turnaround")
         self.line_wait, = self.ax.plot([], [], label="Avg Waiting")
         self.line_response, = self.ax.plot([], [], label="Avg Response Time")
@@ -32,15 +32,14 @@ class AvgMetricsGraph(QWidget):
         layout.addWidget(self.canvas)
 
     # Receives current a list of completed processes and calculates averages .
-    @pyqtSlot(object, int)
-    def updateAvgMetricsGraph(self, completed, _):
+    @pyqtSlot(object)
+    def updateGraph(self, completed):
         if completed:
             avg_turnaround = sum(p.turnaroundTime for p in completed) / len(completed)
             avg_waiting    = sum(p.waitingTime    for p in completed) / len(completed)
             avg_responseTime  = sum(((p.firstScheduling / 1000) - p.arrivalTime) for p in completed) / len(completed)
         else:
             avg_turnaround = avg_waiting = avg_responseTime = 0.0
-
 
         self.data.append((GlobalClock.getTime(), avg_turnaround, avg_waiting, avg_responseTime))
         self.redraw()

@@ -14,10 +14,6 @@ class ClockConfigPanel(QGroupBox):
         
         formLayout = QFormLayout()
         self.setLayout(formLayout)
-        
-        useRealTime = QCheckBox("Use real-time simulation")
-        useRealTime.setToolTip("Enable to synchronize simulation time with real-world time.")
-        useRealTime.setObjectName("useRealTime")
 
         tickDuration = QDoubleSpinBox()
         tickDuration.setToolTip("Duration of each simulation tick or time unit.")
@@ -26,27 +22,21 @@ class ClockConfigPanel(QGroupBox):
         tickDuration.setDecimals(3)
         tickDuration.setObjectName("tickDuration")
         
-        useRealTime.setChecked(False)
         tickDuration.setValue(1)
 
         if clockConfig:
-            useRealTime.setChecked(clockConfig.get("useRealTimeSimulation", False))
             tickDuration.setValue(clockConfig.get("tick", 0.1))
 
-        self.layout().addRow(useRealTime)
         self.layout().addRow("Tick:", tickDuration)
 
-        self.useRealTime = useRealTime
         self.tickDuration = tickDuration
 
     def getClockConfig(self):
-        useRealTime = self.useRealTime.isChecked()
         tickDuration = self.tickDuration.value()
         
         if tickDuration <= 0:
             raise ValueError("Tick duration must be greater than zero.")
         
         return {
-            "useRealTimeSimulation": useRealTime,
             "tick": tickDuration
         }

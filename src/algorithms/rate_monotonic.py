@@ -17,7 +17,6 @@ class RateMonotonic(Algorithm):
         return highest_priority
     
     def process_arrival(self, process: Process) -> None:
-        print("Process arrived ", process)
         self.ready_queue.append(process)
     
     def process_completion(self, process: Process) -> int:
@@ -25,17 +24,14 @@ class RateMonotonic(Algorithm):
             self.deadline_miss(process)
             return -1
         elif (process.executionsNumber < process.period):
-            print("Process added another execution ", process)
             process.executionsNumber += 1
             return 0
         else:
-            print("Process completed ", process)
             if process in self.ready_queue:
                 self.ready_queue.remove(process)
             return 1
         
     def deadline_miss(self, process: Process) -> None:
-        print("Process DEADLINE MISS ", process)
         if process in self.ready_queue:
                 self.ready_queue.remove(process)
             
