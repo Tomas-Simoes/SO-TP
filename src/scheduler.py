@@ -56,7 +56,11 @@ class SchedulerWorker(QObject):
             roundRobin = self.currentProcess.time_in_current_quantum >= self.schedulingConfig.timeQuantum and self.schedulingConfig.scheduleAlgorithm.upper() == "ROUND ROBIN"
             prioprityPreemptive = (self.currentProcess.priority > min(self.algorithm.ready_queue, key=lambda process: process.priority).priority) and (self.currentProcess.remaining_time > 0) and (len(self.algorithm.ready_queue) > 0) and (self.schedulingConfig.scheduleAlgorithm.upper() == "PRIORITY SCHEDULING (PREEMPTIVE)")
             rateMonotonic = (self.currentProcess.period > min(self.algorithm.ready_queue, key=lambda process: process.period).period) and (self.currentProcess.remaining_time > 0) and (len(self.algorithm.ready_queue) > 0) and (self.schedulingConfig.scheduleAlgorithm.upper() == "RATE MONOTONIC")
-
+            earliestDeadlineFirst = (self.currentProcess.deadline > min(self.algorithm.ready_queue, key=lambda process: process.deadline).deadline) and \
+                           (self.currentProcess.remaining_time > 0) and \
+                           (len(self.algorithm.ready_queue) > 0) and \
+                           (self.schedulingConfig.scheduleAlgorithm.upper() == "EARLIEST DEADLINE FIRST")
+                           
             # Check if process is completed
             if self.currentProcess.remaining_time <= 0:
                 completed_process = self.currentProcess
@@ -106,6 +110,14 @@ class SchedulerWorker(QObject):
                 self.algorithm.ready_queue.append(preempted_process)
                 self.processPreempted.emit(preempted_process, "period priority")
                 self.algorithm.process_preemption(preempted_process, "period priority")
+                self._checkScheduling()
+                
+            elif earliestDeadlineFirst:
+                preempted_process = self.currentProcess
+                self.currentProcess = None 
+                self.algorithm.ready_queue.append(preempted_process)
+                self.processPreempted.emit(preempted_process, "earlier deadline")
+                self.algorithm.process_preemption(preempted_process, "earlier deadline")
                 self._checkScheduling()
                 
         else:

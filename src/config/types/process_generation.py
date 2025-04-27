@@ -25,3 +25,4 @@ class ProcessGenerationConfig:
         self.burst = BurstConfig(config_dict["burst"])
         self.priorities = PrioritiesConfig(config_dict["priorities"])
         self.periods = PeriodsConfig(config_dict["periods"])
+        self.deadline = self.periods
